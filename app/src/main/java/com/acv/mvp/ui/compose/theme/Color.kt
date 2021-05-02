@@ -1,4 +1,4 @@
-package com.acv.mvp.ui.theme
+package com.acv.mvp.ui.compose.theme
 
 import androidx.compose.ui.graphics.Color
 
