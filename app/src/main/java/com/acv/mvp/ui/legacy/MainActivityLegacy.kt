@@ -5,25 +5,23 @@ import androidx.activity.ComponentActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.acv.mvp.databinding.MainBinding
 import com.acv.mvp.domain.Task
-import com.acv.mvp.domain.Tasks
+import com.acv.mvp.presentation.State
+import com.acv.mvp.presentation.Store
+import com.acv.mvp.presentation.ViewStore
 
-class MainActivityLegacy : ComponentActivity() {
+class MainActivityLegacy : ComponentActivity(), ViewStore {
 
     private lateinit var binding: MainBinding
 
-    private val tasks = Tasks(
-        listOf(
-            Task(id = 1, task = "Create Todo App"),
-            Task(id = 2, task = "Create Post"),
-        )
-    )
+    private val adapter: CustomAdapter = CustomAdapter(mutableListOf())
+
+    private val store = Store()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = MainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val adapter: CustomAdapter = CustomAdapter(tasks.tasks.toMutableList())
         binding.rvTask.adapter = adapter
         binding.rvTask.layoutManager = LinearLayoutManager(this)
 
@@ -36,5 +34,12 @@ class MainActivityLegacy : ComponentActivity() {
             )
             binding.tietTask.setText("")
         }
+
+        store.onCreate(this)
+    }
+
+    override fun State.render() {
+        adapter.addAll(tasks.tasks)
+        binding.tietTask.setText(input)
     }
 }

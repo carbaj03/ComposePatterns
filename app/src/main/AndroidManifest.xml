@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Mvp">
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.legacy.MainActivityLegacy"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Mvp.NoActionBar">

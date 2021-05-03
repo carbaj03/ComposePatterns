@@ -12,6 +12,12 @@ import com.acv.mvp.domain.Task
 class CustomAdapter(
     private val tasks: MutableList<Task>,
 ) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+    fun addAll(newTasks: List<Task>) {
+        tasks.clear()
+        tasks.addAll(newTasks)
+        notifyDataSetChanged()
+    }
+
     fun add(task: Task) {
         tasks.add(task)
         notifyItemInserted(tasks.size)
