@@ -2,12 +2,10 @@ package com.acv.mvp.ui.legacy
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.acv.mvp.databinding.MainBinding
-import com.acv.mvp.domain.Task
-import com.acv.mvp.presentation.State
-import com.acv.mvp.presentation.Store
-import com.acv.mvp.presentation.ViewStore
+import com.acv.mvp.presentation.*
 
 class MainActivityLegacy : ComponentActivity(), ViewStore {
 
@@ -25,14 +23,13 @@ class MainActivityLegacy : ComponentActivity(), ViewStore {
         binding.rvTask.adapter = adapter
         binding.rvTask.layoutManager = LinearLayoutManager(this)
 
+        binding.tietTask.addTextChangedListener {
+            store.action(ChangeInput(it.toString()))
+            binding.tietTask.setSelection(it.toString().length)
+        }
+
         binding.btnAdd.setOnClickListener {
-            adapter.add(
-                Task(
-                    id = adapter.itemCount + 1,
-                    task = binding.tietTask.text.toString(),
-                )
-            )
-            binding.tietTask.setText("")
+            store.action(AddTask(binding.tietTask.text.toString()))
         }
 
         store.onCreate(this)

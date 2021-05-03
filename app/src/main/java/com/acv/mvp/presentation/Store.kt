@@ -14,6 +14,8 @@ import kotlinx.coroutines.withContext
 
 sealed class Action
 object LoadTasks : Action()
+data class AddTask(val task: String) : Action()
+data class ChangeInput(val input: String) : Action()
 
 data class State(
     val tasks: Tasks,
@@ -51,7 +53,23 @@ class Store() : ViewModel(), ActionHandler {
 
     fun Action.reduce(currentState: State): State =
         when (this) {
-            LoadTasks -> currentState
+            is LoadTasks -> currentState.copy(
+                tasks = tasks
+            )
+            is ChangeInput -> currentState.copy(
+                input = input
+            )
+            is AddTask -> currentState.copy(
+                tasks = currentState.tasks.copy(
+                    currentState.tasks.tasks.plus(
+                        Task(
+                            id = currentState.tasks.tasks.size + 1,
+                            task = task,
+                        )
+                    )
+                ),
+                input = "",
+            )
         }
 
 
@@ -67,6 +85,10 @@ class Store() : ViewModel(), ActionHandler {
                 }
             }
         }
+    }
+
+    fun action(action: Action) {
+        action.handle()
     }
 }
 
