@@ -1,7 +1,6 @@
 package com.acv.mvp.ui.compose
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -22,9 +21,7 @@ class MainActivity : ComponentActivity() {
         store.action(LoadTasks)
         setContent {
             MvpTheme {
-                Log.e("render", "MvpTheme")
                 Surface(color = MaterialTheme.colors.background) {
-                    Log.e("render", "Surface")
                     val s by store.state.collectAsState()
                     when (val state = s) {
                         Error -> Column {
@@ -36,22 +33,13 @@ class MainActivity : ComponentActivity() {
                         Loading -> Text(text = "Loading")
                         is Success ->
                             Column {
-                                Log.e("render", "Column")
                                 Row {
-                                    Log.e("render", "Row")
                                     TextField(
                                         value = state.input,
                                         onValueChange = { store.action(ChangeInput(it)) }
                                     )
                                     Button(onClick = { store.action(AddTask(state.input)) }) {
-                                        Log.e("render", "Button")
                                         Text(text = "Add")
-                                    }
-                                    Row {
-                                        Log.e("render", "Row2")
-                                        Row {
-                                            Log.e("render", "Row3")
-                                        }
                                     }
                                 }
 
@@ -61,7 +49,6 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
-
                     }
                 }
             }
