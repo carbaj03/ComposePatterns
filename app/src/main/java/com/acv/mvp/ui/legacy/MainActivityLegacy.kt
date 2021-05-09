@@ -2,9 +2,9 @@ package com.acv.mvp.ui.legacy
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.acv.mvp.databinding.MainBinding
 import com.acv.mvp.presentation.*
 import kotlinx.coroutines.flow.collect
@@ -16,36 +16,34 @@ class MainActivityLegacy : ComponentActivity() {
 
     private val adapter: CustomAdapter = CustomAdapter(mutableListOf())
 
-    private val store = Store()
+    private val store by viewModels<FormStore>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = MainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.rvTask.adapter = adapter
-        binding.rvTask.layoutManager = LinearLayoutManager(this)
-
-        binding.tietTask.addTextChangedListener {
-            store.action(ChangeInput(it.toString()))
-            binding.tietTask.setSelection(it.toString().length)
+        binding.tietName.addTextChangedListener {
+            store.action(ChangeName(it.toString()))
+            binding.tietName.setSelection(it.toString().length)
         }
 
-        binding.btnAdd.setOnClickListener {
-            store.action(AddTask(binding.tietTask.text.toString()))
+        binding.tietPhone.addTextChangedListener {
+            store.action(ChangePhone(it.toString()))
+            binding.tietPhone.setSelection(it.toString().length)
+        }
+
+        binding.tietMail.addTextChangedListener {
+            store.action(ChangeMail(it.toString()))
+            binding.tietMail.setSelection(it.toString().length)
         }
 
         lifecycleScope.launch {
             store.state.collect {
-                it.render()
+//                it.render()
             }
         }
 
-        store.action(LoadTasks)
-    }
-
-    private fun State.render() {
-//        adapter.addAll(tasks.tasks)
-//        binding.tietTask.setText(input)
+        store.action(LoadForm)
     }
 }

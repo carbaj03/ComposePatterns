@@ -4,58 +4,79 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.acv.mvp.presentation.*
 import com.acv.mvp.ui.compose.theme.MvpTheme
 
+
 class MainActivity : ComponentActivity() {
-    private val store = Store()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        store.action(LoadTasks)
         setContent {
+            val store: FormStore = viewModel<FormStore>("saf", ScoreViewModelFactory(Repository()))
+            store.action(LoadForm)
             MvpTheme {
                 Surface(color = MaterialTheme.colors.background) {
-                    val s by store.state.collectAsState()
-                    when (val state = s) {
-                        Error -> Column {
-                            Text(text = "Error")
-                            Button(onClick = { store.action(LoadTasks) }) {
-                                Text(text = "Reload")
-                            }
-                        }
-                        Loading -> Text(text = "Loading")
-                        is Success ->
-                            Column {
-                                Row {
-                                    TextField(
-                                        value = state.input,
-                                        onValueChange = { store.action(ChangeInput(it)) }
-                                    )
-                                    Button(onClick = { store.action(AddTask(state.input)) }) {
-                                        Text(text = "Add")
-                                    }
-                                }
-
-                                LazyColumn {
-                                    items(state.tasks.tasks) { task ->
-                                        Text(text = task.task)
-                                    }
-                                }
-                            }
-                    }
+                    val state by store.state.collectAsState()
+                    if (state.isLoading)
+                        Text("Loading")
+                    else
+                        FormScreen(
+                            state.name,
+                            { store.action(ChangeName(it)) },
+                            state.phone,
+                            { store.action(ChangePhone(it)) },
+                            state.mail,
+                            { store.action(ChangeMail(it)) },
+                        )
                 }
             }
         }
     }
+
+    class ScoreViewModelFactory(private val repository: Repository) : ViewModelProvider.Factory {
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(FormStore::class.java)) {
+                return FormStore(repository = repository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
+    }
 }
 
+@Composable
+fun FormScreen(
+    name: String,
+    onNameChange: (String) -> Unit,
+    phone: String,
+    onPhoneChange: (String) -> Unit,
+    mail: String,
+    onMailChange: (String) -> Unit,
+) {
+    Column {
+        TextField(
+            value = name,
+            onValueChange = { onNameChange(it) },
+        )
+        TextField(
+            value = phone,
+            onValueChange = { onPhoneChange(it) },
+        )
+        TextField(
+            value = mail,
+            onValueChange = { onMailChange(it) },
+        )
+    }
+}
 
 @Composable
 fun Greeting(name: String) {

@@ -4,36 +4,46 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:id="@+id/header"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_margin="4dp">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilTaks"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tietTask"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minWidth="200dp" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnAdd"
-            android:layout_width="wrap_content"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/tietName"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Add" />
+            android:minWidth="200dp" />
 
-    </androidx.appcompat.widget.LinearLayoutCompat>
+    </com.google.android.material.textfield.TextInputLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvTask"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilPhone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/tietPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minWidth="200dp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilMail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/tietMail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minWidth="200dp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
 </androidx.appcompat.widget.LinearLayoutCompat>
