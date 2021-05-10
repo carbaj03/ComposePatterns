@@ -16,7 +16,7 @@ class MainActivityLegacy : ComponentActivity() {
 
     private val adapter: CustomAdapter = CustomAdapter(mutableListOf())
 
-    private val store by viewModels<FormStore>()
+    private val store by viewModels<TodosStore>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

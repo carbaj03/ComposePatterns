@@ -2,52 +2,27 @@ package com.acv.mvp.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.acv.mvp.ui.compose.Todo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 sealed class Action
-object LoadForm : Action()
-data class FormLoaded(
-    val name: String,
-    val phone: String,
-    val mail: String,
+object LoadTodos : Action()
+data class LoadTodosSuccess(
+    val todos: List<Todo>
 ) : Action()
 
-data class ChangeName(val name: String) : Action()
-data class ChangePhone(val phone: String) : Action()
-data class ChangeMail(val mail: String) : Action()
+data class AddTodo(val text: String) : Action()
 
-interface StoreState
-
-data class FormState(
-    val isLoading: Boolean,
-    val name: String,
-    val phone: String,
-    val mail: String,
-) : StoreState {
+data class TodosState(
+    val todos: List<Todo>,
+) {
     companion object {
-        fun empty() = FormState(isLoading = true, name = "", phone = "", mail = "")
+        fun empty() = TodosState(emptyList())
     }
 }
-//sealed class FormState : StoreState {
-//    object Error : FormState()
-//    object Loading : FormState()
-//    data class Success(
-//        val name: String,
-//        val phone: String,
-//        val mail: String,
-//    ) : FormState() {
-//        companion object {
-//            fun empty() = Success("", "", "")
-//        }
-//    }
-//
-//    fun state(f: (Success) -> FormState) =
-//        if (this is Success) f(this)
-//        else f(Success.empty())
-//}
 
 
 abstract class Store<A> : ViewModel() {
@@ -56,54 +31,43 @@ abstract class Store<A> : ViewModel() {
 }
 
 class Repository() {
-    private val name = ""
-    private val phone = ""
-    private val mail = ""
+    private var todos = listOf(Todo(0, "Start", false))
 
-    suspend fun getName(): String = name
-    suspend fun getPhone(): String = phone
-    suspend fun getMail(): String = mail
+    suspend fun getAll(): List<Todo> =
+        todos
 
-    val nameFlow: MutableStateFlow<String> = MutableStateFlow("")
-    val phoneFlow: MutableStateFlow<String> = MutableStateFlow("")
-    val mailFlow: MutableStateFlow<String> = MutableStateFlow("")
+    suspend fun put(todo: Todo): List<Todo> {
+        todos = todos.plus(todo)
+        return todos
+    }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class FormStore(
+class TodosStore(
     private val repository: Repository
-) : Store<FormState>() {
-    override val state: MutableStateFlow<FormState> = MutableStateFlow(FormState.empty())
+) : Store<TodosState>() {
+    override val state: MutableStateFlow<TodosState> = MutableStateFlow(TodosState.empty())
 
     override fun action(action: Action) {
         state.value = action.reduce(state.value)
         action.sideEffects()
     }
 
-    private fun Action.reduce(currentState: FormState): FormState =
+    private fun Action.reduce(currentState: TodosState): TodosState =
         when (this) {
-            is LoadForm -> currentState.copy(isLoading = true)
-            is FormLoaded -> currentState.copy(isLoading = false, name = name, mail = mail, phone = phone)
-            is ChangeName -> currentState.copy(name = name)
-            is ChangeMail -> currentState.copy(mail = mail)
-            is ChangePhone -> currentState.copy(phone = phone)
+            is LoadTodos -> currentState
+            is LoadTodosSuccess -> currentState.copy(todos = todos)
         }
 
     private fun Action.sideEffects() {
         when (this) {
-            is LoadForm -> loadForm()
+            is LoadTodos -> loadForm()
         }
     }
 
     private fun loadForm() {
         viewModelScope.launch {
-            action(
-                FormLoaded(
-                    repository.getName(),
-                    repository.getMail(),
-                    repository.getPhone(),
-                )
-            )
+            action(LoadTodosSuccess(repository.getAll()))
         }
     }
 }
