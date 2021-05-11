@@ -1,6 +1,7 @@
 package com.acv.mvp.ui.compose
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -18,7 +19,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.acv.mvp.presentation.*
 import com.acv.mvp.ui.compose.theme.MvpTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -35,48 +45,141 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(InternalComposeApi::class)
+@Composable
+fun <A> useSelector(f: (TodosState) -> A): State<A> {
+    val store: TodosStore = viewModel()
+
+    val selector: Flow<A> = store.state.map { f(it) }
+
+    val result: MutableState<A> = remember {
+        mutableStateOf(f(store.state.value))
+    }
+
+    val applyContext = currentComposer.applyCoroutineContext
+    remember(selector) {
+        object : RememberObserver {
+            private val scope = CoroutineScope(applyContext)
+            private var job: Job? = null
+
+            override fun onRemembered() {
+                job?.cancel("Old job was still running!")
+                job = scope.launch {
+                    selector.collect { result.value = it }
+                }
+            }
+
+            override fun onForgotten() {
+                job?.cancel()
+                job = null
+            }
+
+            override fun onAbandoned() {
+                job?.cancel()
+                job = null
+            }
+        }
+    }
+    return result
+}
+//    val s: Flow<A> = store.state.map { f(it) }
+//    return selector.collectAsState(f(store.state.value))
+
+@Composable
+fun useDispatch(): State<(Action) -> Unit> {
+    val store = viewModel<TodosStore>()
+    return remember { mutableStateOf({ action: Action -> store.action(action) }) }
+}
+
 @Composable
 fun App() {
-    var todos by remember { mutableStateOf(emptyList<Todo>()) }
+    val todos by useSelector { it.todos }
+    val dispatcher by useDispatch()
 
     Column {
         Header(
-            onDone = {
-                todos = todos.plus(
-                    Todo(
-                        id = todos.count(),
-                        text = it,
-                        completed = false,
-                    )
-                )
-            }
+            onDone = { dispatcher(AddTodo(it)) }
         )
 
-        TodoList(todos = todos)
+        Header2()
+
+        TodoList(
+            todos = todos
+        )
 
         Footer(
-            count = todos.count(),
-            onClearCompleted = {
-                todos = todos.filterNot { it.completed }
-            },
-            markAllCompleted = {
-                todos = todos.map { it.copy(completed = true) }
-            },
-            onSelected = { filter ->
-                when (filter) {
-                    Filter.All -> todos
-                    Filter.Active -> {
-                        todos = todos.filterNot { it.completed }
-                    }
-                    Filter.Completed -> {
-                        todos = todos.filter { it.completed }
-                    }
-                }
-            }
+            count = 0,
+            onClearCompleted = {},
+            markAllCompleted = {},
+            onSelected = { },
         )
     }
 }
 
+@Composable
+fun Header2() {
+    Log.e("Compose", "Header2")
+    val text by useSelector { it.input2 }
+    val dispatcher by useDispatch()
+
+    TextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = text,
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                dispatcher(AddTodo(text))
+                dispatcher(InputChange2(""))
+            }
+        ),
+        onValueChange = {
+            dispatcher(InputChange2(it))
+        }
+    )
+}
+
+
+@Composable
+fun Header(onDone: (String) -> Unit) {
+    Log.e("Compose", "Header1")
+    var text by remember { mutableStateOf("") }
+//    val text by useSelector { it.input }
+//    val dispatcher by useDispatch()
+
+    TextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = text,
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                onDone(text)
+                dispatcher(InputChange(""))
+//                text = ""
+            }
+        ),
+        onValueChange = {
+            dispatcher(InputChange(it))
+//            text = it
+        }
+    )
+}
+
+@Composable
+fun TodoList(todos: List<Todo>) {
+    Log.e("Compose", "TodoList")
+    LazyColumn {
+        items(todos) {
+            Text(
+                text = it.text,
+                color = if (it.completed) Color.Black else Color.LightGray
+            )
+        }
+    }
+}
 
 @Composable
 fun Footer(
@@ -85,6 +188,7 @@ fun Footer(
     onClearCompleted: () -> Unit,
     onSelected: (Filter) -> Unit,
 ) {
+    Log.e("Compose", "Footer")
     Column {
         Button(onClick = { markAllCompleted() }) {
             Text("Mark All Completed")
@@ -99,22 +203,16 @@ fun Footer(
 
 @Composable
 fun RemainingTodos(count: Int) {
+    Log.e("Compose", "RemainingTodos")
     Column {
-        Text(
-            text = "Remaining Todos",
-        )
-        Text(
-            text = "$count items left"
-        )
+        Text(text = "Remaining Todos")
+        Text(text = "$count items left")
     }
-}
-
-enum class Filter {
-    All, Active, Completed
 }
 
 @Composable
 fun StatusFilter(onSelected: (Filter) -> Unit) {
+    Log.e("Compose", "StatusFilter")
     var currentFilter by remember {
         mutableStateOf(Filter.All)
     }
@@ -161,36 +259,8 @@ data class Todo(
     val completed: Boolean,
 )
 
-@Composable
-fun TodoList(todos: List<Todo>) {
-    LazyColumn {
-        items(todos) {
-            Text(
-                text = it.text,
-                color = if (it.completed) Color.Black else Color.LightGray
-            )
-        }
-    }
-}
-
-@Composable
-fun Header(onDone: (String) -> Unit) {
-    var text by remember { mutableStateOf("") }
-
-    TextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = text,
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = KeyboardActions(
-            onDone = {
-                onDone(text)
-                text = ""
-            }
-        ),
-        onValueChange = { text = it }
-    )
+enum class Filter {
+    All, Active, Completed
 }
 
 @Composable
