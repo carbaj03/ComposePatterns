@@ -94,18 +94,13 @@ fun useDispatch(): State<(Action) -> Unit> {
 @Composable
 fun App() {
     val todos by useSelector { it.todos }
-    val dispatcher by useDispatch()
 
     Column {
-        Header(
-            onDone = { dispatcher(AddTodo(it)) }
-        )
+        Header()
 
         Header2()
 
-        TodoList(
-            todos = todos
-        )
+        TodoList(todos = todos)
 
         Footer(
             count = 0,
@@ -142,11 +137,10 @@ fun Header2() {
 
 
 @Composable
-fun Header(onDone: (String) -> Unit) {
+fun Header() {
     Log.e("Compose", "Header1")
-    var text by remember { mutableStateOf("") }
-//    val text by useSelector { it.input }
-//    val dispatcher by useDispatch()
+    val text by useSelector { it.input }
+    val dispatcher by useDispatch()
 
     TextField(
         modifier = Modifier.fillMaxWidth(),
@@ -156,14 +150,12 @@ fun Header(onDone: (String) -> Unit) {
         ),
         keyboardActions = KeyboardActions(
             onDone = {
-                onDone(text)
+                dispatcher(AddTodo(text))
                 dispatcher(InputChange(""))
-//                text = ""
             }
         ),
         onValueChange = {
             dispatcher(InputChange(it))
-//            text = it
         }
     )
 }
