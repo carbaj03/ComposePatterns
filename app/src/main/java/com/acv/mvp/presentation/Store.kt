@@ -6,33 +6,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-sealed class Action
-object LoadTodos : Action()
-data class LoadTodosSuccess(
-    val todos: List<Todo>
-) : Action()
-
-data class InputChange(
-    val text: String,
-) : Action()
-
-data class InputChange2(
-    val text: String,
-) : Action()
-
-data class AddTodo(val text: String) : Action()
-
-data class TodosState(
-    val todos: List<Todo>,
-    val input: String,
-    val input2: String,
-) {
-    companion object {
-        fun empty() = TodosState(emptyList(), "", "")
-    }
-}
-
-
 abstract class Store<A> : ViewModel() {
     abstract val state: StateFlow<A>
     abstract fun action(action: Action)
@@ -77,6 +50,21 @@ class TodosStore(
             )
             is InputChange -> currentState.copy(input = text)
             is InputChange2 -> currentState.copy(input2 = text)
+            is ClearCompleted -> currentState.copy(todos = currentState.todos.filterNot { it.completed })
+            is CompleteAll -> currentState.copy(todos = currentState.todos.map { it.copy(completed = true) })
+            is CompleteTodo -> currentState.copy(
+                todos = currentState.todos.update(
+                    condition = { id == selectedId },
+                    transform = { copy(completed = true) }
+                )
+            )
+            is ActivateTodo -> currentState.copy(
+                todos = currentState.todos.update(
+                    condition = { id == selectedId },
+                    transform = { copy(completed = false) }
+                )
+            )
+            is FilterBy -> currentState.copy(filter = filter)
         }
 
 //    private fun Action.sideEffects() {
