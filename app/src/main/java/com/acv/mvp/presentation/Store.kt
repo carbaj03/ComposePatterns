@@ -11,18 +11,6 @@ abstract class Store<A> : ViewModel() {
     abstract fun action(action: Action)
 }
 
-class Repository() {
-    private var todos = listOf(Todo(0, "Start", false))
-
-    suspend fun getAll(): List<Todo> =
-        todos
-
-    suspend fun put(todo: Todo): List<Todo> {
-        todos = todos.plus(todo)
-        return todos
-    }
-}
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class TodosStore(
 //    private val repository: Repository
@@ -52,12 +40,15 @@ class TodosStore(
             is InputChange2 -> currentState.copy(input2 = text)
             is ClearCompleted -> currentState.copy(todos = currentState.todos.filterNot { it.completed })
             is CompleteAll -> currentState.copy(todos = currentState.todos.map { it.copy(completed = true) })
-            is CompleteTodo -> currentState.copy(
-                todos = currentState.todos.update(
-                    condition = { id == selectedId },
-                    transform = { copy(completed = true) }
+            is CompleteTodo -> {
+                currentState.copy(
+                    todos = currentState.todos.update(
+                        condition = { id == selectedId },
+                        transform = { copy(completed = true) }
+                    )
                 )
-            )
+
+            }
             is ActivateTodo -> currentState.copy(
                 todos = currentState.todos.update(
                     condition = { id == selectedId },

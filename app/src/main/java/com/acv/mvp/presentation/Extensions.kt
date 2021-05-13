@@ -1,11 +1,11 @@
 package com.acv.mvp.presentation
 
 
-inline fun <T, R> Iterable<T>.update(
-    condition: T.() -> Boolean,
-    transform: T.() -> R
-): List<R> =
+inline fun <A> Iterable<A>.update(
+    condition: A.() -> Boolean,
+    transform: A.() -> A
+): List<A> =
     map {
         if (condition(it)) transform(it)
-        else it as R
+        else it
     }

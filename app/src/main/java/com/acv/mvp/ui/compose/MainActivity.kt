@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.acv.mvp.presentation.*
 import com.acv.mvp.ui.compose.theme.MvpTheme
@@ -190,29 +192,30 @@ fun StatusFilter(
     Log.e("Compose", "StatusFilter")
     val currentFilter by useSelector { it.filter }
 
-    val color = { filter: Filter ->
+    val color: (Filter) -> Color = { filter: Filter ->
         if (filter == currentFilter) Color.LightGray else Color.Transparent
+    }
+
+    val modifier: (Filter) -> Modifier = { filter: Filter ->
+        Modifier
+            .padding(4.dp)
+            .clickable { onSelected(filter) }
+            .background(color = color(filter))
     }
 
     Text(text = "Filter by Status")
     Row {
         Text(
             text = "All",
-            modifier = Modifier
-                .clickable { onSelected(Filter.All) }
-                .background(color = color(Filter.All))
+            modifier = modifier(Filter.All)
         )
         Text(
             text = "Active",
-            modifier = Modifier
-                .clickable { onSelected(Filter.Active) }
-                .background(color = color(Filter.Active))
+            modifier = modifier(Filter.Active)
         )
         Text(
             text = "Completed",
-            modifier = Modifier
-                .clickable { onSelected(Filter.Completed) }
-                .background(color = color(Filter.Completed))
+            modifier = modifier(Filter.Completed)
         )
     }
 }
@@ -223,8 +226,10 @@ data class Todo(
     val completed: Boolean,
 )
 
-enum class Filter {
-    All, Active, Completed
+sealed class Filter {
+    object All : Filter()
+    object Active : Filter()
+    object Completed : Filter()
 }
 
 @Composable
