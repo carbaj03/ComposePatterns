@@ -21,12 +21,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.acv.mvp.data.Repository
 import com.acv.mvp.presentation.*
 import com.acv.mvp.ui.compose.theme.MvpTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+class StoreFactory(private val sideEffects: List<SideEffect>) : ViewModelProvider.Factory {
+    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(TodosStore::class.java)) {
+            return TodosStore(sideEffects = sideEffects) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
 
 class MainActivity : ComponentActivity() {
 
@@ -43,16 +56,26 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+val storeFactory = StoreFactory(
+    listOf(
+        TodoSideEffect(
+            repository = Repository(),
+            coroutineContext = Dispatchers.IO + SupervisorJob(),
+        ),
+        LoggerSideEffect()
+    )
+)
+
 @Composable
 fun <A> useSelector(f: (TodosState) -> A): State<A> {
-    val store: TodosStore = viewModel()
+    val store: TodosStore = viewModel(factory = storeFactory)
     val selector: Flow<A> = store.state.map { f(it) }
     return selector.collectAsState(f(store.state.value))
 }
 
 @Composable
 fun useDispatch(): State<(Action) -> Unit> {
-    val store = viewModel<TodosStore>()
+    val store: TodosStore = viewModel(factory = storeFactory)
     return remember { mutableStateOf({ action: Action -> store.action(action) }) }
 }
 

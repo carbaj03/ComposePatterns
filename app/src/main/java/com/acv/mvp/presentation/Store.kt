@@ -1,72 +1,86 @@
 package com.acv.mvp.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.acv.mvp.data.Repository
 import com.acv.mvp.ui.compose.Todo
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 abstract class Store<A> : ViewModel() {
     abstract val state: StateFlow<A>
     abstract fun action(action: Action)
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
+interface SideEffect {
+    fun next(action: Action, store: Store<*>)
+}
+
+class TodoSideEffect(
+    private val repository: Repository,
+    override val coroutineContext: CoroutineContext,
+) : SideEffect, CoroutineScope {
+    override fun next(action: Action, store: Store<*>) {
+        launch {
+            when (action) {
+                is LoadTodos -> {
+                    store.action(LoadTodosSuccess(repository.getAll()))
+                }
+            }
+        }
+    }
+}
+
+class LoggerSideEffect() : SideEffect {
+    override fun next(action: Action, store: Store<*>) {
+        Log.e("oldState", store.state.value.toString())
+        Log.e("logger", action.toString())
+    }
+}
+
 class TodosStore(
-//    private val repository: Repository
+    private val sideEffects: List<SideEffect>
 ) : Store<TodosState>() {
     override val state: MutableStateFlow<TodosState> =
         MutableStateFlow(TodosState.empty())
 
     override fun action(action: Action) {
-        state.value = action.reduce(state.value)
-//        action.sideEffects()
+        sideEffects.forEach { it.next(action, this) }
+        state.value = state.value.reduce(action)
     }
 
-    private fun Action.reduce(currentState: TodosState): TodosState =
-        when (this) {
-            is LoadTodos -> currentState
-            is LoadTodosSuccess -> currentState.copy(todos = todos)
-            is AddTodo -> currentState.copy(
-                todos = currentState.todos.plus(
+    private fun TodosState.reduce(action: Action): TodosState =
+        when (action) {
+            is LoadTodos -> this
+            is LoadTodosSuccess -> copy(todos = todos)
+            is AddTodo -> copy(
+                todos = todos.plus(
                     Todo(
-                        id = currentState.todos.size + 1,
-                        text = text,
+                        id = todos.size + 1,
+                        text = action.text,
                         completed = false,
                     )
                 )
             )
-            is InputChange -> currentState.copy(input = text)
-            is InputChange2 -> currentState.copy(input2 = text)
-            is ClearCompleted -> currentState.copy(todos = currentState.todos.filterNot { it.completed })
-            is CompleteAll -> currentState.copy(todos = currentState.todos.map { it.copy(completed = true) })
-            is CompleteTodo -> {
-                currentState.copy(
-                    todos = currentState.todos.update(
-                        condition = { id == selectedId },
-                        transform = { copy(completed = true) }
-                    )
+            is InputChange -> copy(input = action.text)
+            is InputChange2 -> copy(input2 = action.text)
+            is ClearCompleted -> copy(todos = todos.filterNot { it.completed })
+            is CompleteAll -> copy(todos = todos.map { it.copy(completed = true) })
+            is CompleteTodo -> copy(
+                todos = todos.update(
+                    condition = { id == action.selectedId },
+                    transform = { copy(completed = true) }
                 )
-
-            }
-            is ActivateTodo -> currentState.copy(
-                todos = currentState.todos.update(
-                    condition = { id == selectedId },
+            )
+            is ActivateTodo -> copy(
+                todos = todos.update(
+                    condition = { id == action.selectedId },
                     transform = { copy(completed = false) }
                 )
             )
-            is FilterBy -> currentState.copy(filter = filter)
+            is FilterBy -> copy(filter = action.filter)
         }
-
-//    private fun Action.sideEffects() {
-//        when (this) {
-//            is LoadTodos -> loadForm()
-//        }
-//    }
-
-//    private fun loadForm() {
-//        viewModelScope.launch {
-//            action(LoadTodosSuccess(repository.getAll()))
-//        }
-//    }
 }
