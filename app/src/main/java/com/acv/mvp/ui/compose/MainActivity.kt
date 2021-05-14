@@ -96,12 +96,7 @@ fun App() {
             }
         )
 
-        Footer(
-            count = itemsLeft,
-            onClearCompleted = { dispatcher(ClearCompleted) },
-            markAllCompleted = { dispatcher(CompleteAll) },
-            onFilterSelected = { dispatcher(FilterBy(it)) },
-        )
+        Footer(count = itemsLeft)
     }
 }
 
@@ -155,20 +150,18 @@ fun TodoList(
 @Composable
 fun Footer(
     count: Int,
-    markAllCompleted: () -> Unit,
-    onClearCompleted: () -> Unit,
-    onFilterSelected: (Filter) -> Unit,
 ) {
     Log.e("Compose", "Footer")
+    val dispatcher by useDispatch()
     Column {
-        Button(onClick = { markAllCompleted() }) {
+        Button(onClick = { dispatcher(CompleteAll) }) {
             Text("Mark All Completed")
         }
-        Button(onClick = { onClearCompleted() }) {
+        Button(onClick = { dispatcher(ClearCompleted) }) {
             Text(text = "Clear Completed")
         }
         RemainingTodos(count)
-        StatusFilter(onSelected = onFilterSelected)
+        StatusFilter()
     }
 }
 
@@ -182,11 +175,10 @@ fun RemainingTodos(count: Int) {
 }
 
 @Composable
-fun StatusFilter(
-    onSelected: (Filter) -> Unit
-) {
+fun StatusFilter() {
     Log.e("Compose", "StatusFilter")
     val currentFilter by useSelector { it.filter }
+    val dispatcher by useDispatch()
 
     val color: (Filter) -> Color = { filter: Filter ->
         if (filter == currentFilter) Color.LightGray else Color.Transparent
@@ -195,7 +187,7 @@ fun StatusFilter(
     val modifier: (Filter) -> Modifier = { filter: Filter ->
         Modifier
             .padding(4.dp)
-            .clickable { onSelected(filter) }
+            .clickable { dispatcher(FilterBy(filter)) }
             .background(color = color(filter))
     }
 
