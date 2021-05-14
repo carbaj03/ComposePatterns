@@ -16,46 +16,54 @@ abstract class Store<S> : ViewModel() {
 }
 
 fun interface Reducer<S, A : Action> {
-    operator fun S.invoke(action: A): S
+    operator fun invoke(state: S, action: A): S
 }
 
-val TodoReducer = Reducer<TodosState, Action> { action ->
-    when (action) {
-        is LoadTodos -> this
-        is LoadTodosSuccess -> copy(todos = todos)
-        is AddTodo -> copy(
-            todos = todos.plus(
-                Todo(
-                    id = todos.size + 1,
-                    text = action.text,
-                    completed = false,
+fun <S, A : Action> combineReducers(vararg reducers: Reducer<S, A>): Reducer<S, A> =
+    Reducer { state, action ->
+        reducers.fold(state, { s, reducer -> reducer(s, action) })
+    }
+
+
+val TodoReducer = Reducer<TodosState, Action> { state, action ->
+    with(state) {
+        when (action) {
+            is LoadTodos -> this
+            is LoadTodosSuccess -> copy(todos = todos)
+            is AddTodo -> copy(
+                todos = todos.plus(
+                    Todo(
+                        id = todos.size + 1,
+                        text = action.text,
+                        completed = false,
+                    )
                 )
             )
-        )
-        is InputChange -> copy(
-            input = action.text
-        )
-        is ClearCompleted -> copy(
-            todos = todos.filterNot { it.completed }
-        )
-        is CompleteAll -> copy(
-            todos = todos.map { it.copy(completed = true) }
-        )
-        is CompleteTodo -> copy(
-            todos = todos.update(
-                condition = { id == action.selectedId },
-                transform = { copy(completed = true) }
+            is InputChange -> copy(
+                input = action.text
             )
-        )
-        is ActivateTodo -> copy(
-            todos = todos.update(
-                condition = { id == action.selectedId },
-                transform = { copy(completed = false) }
+            is ClearCompleted -> copy(
+                todos = todos.filterNot { it.completed }
             )
-        )
-        is FilterBy -> copy(
-            filter = action.filter
-        )
+            is CompleteAll -> copy(
+                todos = todos.map { it.copy(completed = true) }
+            )
+            is CompleteTodo -> copy(
+                todos = todos.update(
+                    condition = { id == action.selectedId },
+                    transform = { copy(completed = true) }
+                )
+            )
+            is ActivateTodo -> copy(
+                todos = todos.update(
+                    condition = { id == action.selectedId },
+                    transform = { copy(completed = false) }
+                )
+            )
+            is FilterBy -> copy(
+                filter = action.filter
+            )
+        }
     }
 }
 
@@ -99,5 +107,5 @@ class TodosStore(
     }
 
     private fun TodosState.reduce(action: Action): TodosState =
-        reducer.run { invoke(action) }
+        reducer(this, action)
 }

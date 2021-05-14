@@ -70,7 +70,7 @@ val storeFactory = StoreFactory(
         ),
         LoggerSideEffect()
     ),
-    reducer = TodoReducer
+    reducer = combineReducers(TodoReducer)
 )
 
 @Composable
