@@ -88,8 +88,6 @@ fun App() {
     Column {
         Header()
 
-        Header2()
-
         TodoList(
             todos = todos,
             onItemSelected = { isCompleted, todo ->
@@ -106,31 +104,6 @@ fun App() {
         )
     }
 }
-
-@Composable
-fun Header2() {
-    Log.e("Compose", "Header2")
-    val text by useSelector { it.input2 }
-    val dispatcher by useDispatch()
-
-    TextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = text,
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = KeyboardActions(
-            onDone = {
-                dispatcher(AddTodo(text))
-                dispatcher(InputChange2(""))
-            }
-        ),
-        onValueChange = {
-            dispatcher(InputChange2(it))
-        }
-    )
-}
-
 
 @Composable
 fun Header() {

@@ -6,11 +6,10 @@ import com.acv.mvp.ui.compose.Todo
 data class TodosState(
     val todos: List<Todo>,
     val input: String,
-    val input2: String,
     val filter: Filter,
 ) {
     companion object {
-        fun empty() = TodosState(emptyList(), "", "", Filter.All)
+        fun empty() = TodosState(emptyList(), "", Filter.All)
     }
 
     fun itemsLeft(): Int =

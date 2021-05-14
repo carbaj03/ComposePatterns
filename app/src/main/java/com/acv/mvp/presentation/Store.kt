@@ -66,7 +66,6 @@ class TodosStore(
                 )
             )
             is InputChange -> copy(input = action.text)
-            is InputChange2 -> copy(input2 = action.text)
             is ClearCompleted -> copy(todos = todos.filterNot { it.completed })
             is CompleteAll -> copy(todos = todos.map { it.copy(completed = true) })
             is CompleteTodo -> copy(

@@ -13,10 +13,6 @@ data class InputChange(
     val text: String,
 ) : Action()
 
-data class InputChange2(
-    val text: String,
-) : Action()
-
 data class AddTodo(val text: String) : Action()
 object ClearCompleted : Action()
 object CompleteAll : Action()
