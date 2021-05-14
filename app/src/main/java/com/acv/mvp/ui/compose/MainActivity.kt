@@ -32,10 +32,16 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class StoreFactory(private val sideEffects: List<SideEffect>) : ViewModelProvider.Factory {
+class StoreFactory(
+    private val sideEffects: List<SideEffect<Action>>,
+    private val reducer: Reducer<TodosState, Action>,
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TodosStore::class.java)) {
-            return TodosStore(sideEffects = sideEffects) as T
+            return TodosStore(
+                sideEffects = sideEffects,
+                reducer = reducer,
+            ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
@@ -57,13 +63,14 @@ class MainActivity : ComponentActivity() {
 }
 
 val storeFactory = StoreFactory(
-    listOf(
+    sideEffects = listOf(
         TodoSideEffect(
             repository = Repository(),
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         ),
         LoggerSideEffect()
-    )
+    ),
+    reducer = TodoReducer
 )
 
 @Composable
@@ -76,7 +83,7 @@ fun <A> useSelector(f: (TodosState) -> A): State<A> {
 @Composable
 fun useDispatch(): State<(Action) -> Unit> {
     val store: TodosStore = viewModel(factory = storeFactory)
-    return remember { mutableStateOf({ action: Action -> store.action(action) }) }
+    return remember { mutableStateOf({ action: Action -> store.dispatch(action) }) }
 }
 
 @Composable
