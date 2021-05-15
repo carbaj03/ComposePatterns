@@ -3,6 +3,9 @@ package com.acv.mvp.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.acv.mvp.data.Repository
+import com.acv.mvp.redux.Action
+import com.acv.mvp.redux.Reducer
+import com.acv.mvp.redux.SideEffect
 import com.acv.mvp.ui.compose.Todo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,72 +13,65 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
-abstract class Store<S> : ViewModel() {
+
+interface StoreState {
+    val initial: Any
+}
+
+abstract class Store<S : StoreState, A : Action> : ViewModel() {
     abstract val state: StateFlow<S>
-    abstract fun dispatch(action: Action)
+    abstract fun dispatch(action: A)
 }
 
-fun interface Reducer<S, A : Action> {
-    operator fun invoke(state: S, action: A): S
-}
-
-fun <S, A : Action> combineReducers(vararg reducers: Reducer<S, A>): Reducer<S, A> =
+val TodoReducer: Reducer<TodosState, TodoAction> =
     Reducer { state, action ->
-        reducers.fold(state, { s, reducer -> reducer(s, action) })
-    }
-
-
-val TodoReducer = Reducer<TodosState, Action> { state, action ->
-    with(state) {
-        when (action) {
-            is LoadTodos -> this
-            is LoadTodosSuccess -> copy(todos = todos)
-            is AddTodo -> copy(
-                todos = todos.plus(
-                    Todo(
-                        id = todos.size + 1,
-                        text = action.text,
-                        completed = false,
+        with(state) {
+            when (action) {
+                is LoadTodos -> this
+                is LoadTodosSuccess -> copy(todos = todos)
+                is AddTodo -> copy(
+                    todos = todos.plus(
+                        Todo(
+                            id = todos.size + 1,
+                            text = action.text,
+                            completed = false,
+                        )
                     )
                 )
-            )
-            is InputChange -> copy(
-                input = action.text
-            )
-            is ClearCompleted -> copy(
-                todos = todos.filterNot { it.completed }
-            )
-            is CompleteAll -> copy(
-                todos = todos.map { it.copy(completed = true) }
-            )
-            is CompleteTodo -> copy(
-                todos = todos.update(
-                    condition = { id == action.selectedId },
-                    transform = { copy(completed = true) }
+                is InputChange -> copy(
+                    input = action.text
                 )
-            )
-            is ActivateTodo -> copy(
-                todos = todos.update(
-                    condition = { id == action.selectedId },
-                    transform = { copy(completed = false) }
+                is ClearCompleted -> copy(
+                    todos = todos.filterNot { it.completed }
                 )
-            )
-            is FilterBy -> copy(
-                filter = action.filter
-            )
+                is CompleteAll -> copy(
+                    todos = todos.map { it.copy(completed = true) }
+                )
+                is CompleteTodo -> copy(
+                    todos = todos.update(
+                        condition = { id == action.selectedId },
+                        transform = { copy(completed = true) }
+                    )
+                )
+                is ActivateTodo -> copy(
+                    todos = todos.update(
+                        condition = { id == action.selectedId },
+                        transform = { copy(completed = false) }
+                    )
+                )
+                is FilterBy -> copy(
+                    filter = action.filter
+                )
+            }
         }
     }
-}
 
-fun interface SideEffect<A : Action> {
-    operator fun invoke(action: A, store: Store<*>)
-}
 
 class TodoSideEffect(
     private val repository: Repository,
     override val coroutineContext: CoroutineContext,
-) : SideEffect<Action>, CoroutineScope {
-    override fun invoke(action: Action, store: Store<*>) {
+) : SideEffect<TodoAction, TodosState>, CoroutineScope {
+    override fun invoke(action: TodoAction, store: Store<TodosState, TodoAction>): TodoAction {
         launch {
             when (action) {
                 is LoadTodos -> {
@@ -84,28 +80,35 @@ class TodoSideEffect(
                 }
             }
         }
+        return action
     }
 }
 
-class LoggerSideEffect() : SideEffect<Action> {
-    override fun invoke(action: Action, store: Store<*>) {
-        Log.e("oldState", store.state.value.toString())
-        Log.e("logger", action.toString())
+class LoggerSideEffect(
+    override val coroutineContext: CoroutineContext,
+) : SideEffect<TodoAction, TodosState>, CoroutineScope {
+    override fun invoke(action: TodoAction, store: Store<TodosState, TodoAction>): TodoAction {
+        launch {
+            Log.e("oldState", store.state.value.toString())
+            Log.e("logger", action.toString())
+        }
+        return action
     }
 }
 
-class TodosStore(
-    private val sideEffects: List<SideEffect<Action>>,
-    private val reducer: Reducer<TodosState, Action>,
-) : Store<TodosState>() {
-    override val state: MutableStateFlow<TodosState> =
-        MutableStateFlow(TodosState.empty())
+class TodosStore<A : Action, S : StoreState>(
+    private val sideEffects: List<SideEffect<A, S>>,
+    private val reducer: Reducer<S, A>,
+    initialState: S
+) : Store<S, A>() {
+    override val state: MutableStateFlow<S> =
+        MutableStateFlow(initialState)
 
-    override fun dispatch(action: Action) {
+    override fun dispatch(action: A) {
         sideEffects.forEach { it(action, this) }
         state.value = state.value.reduce(action)
     }
 
-    private fun TodosState.reduce(action: Action): TodosState =
+    private fun S.reduce(action: A): S =
         reducer(this, action)
 }

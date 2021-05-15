@@ -7,10 +7,13 @@ data class TodosState(
     val todos: List<Todo>,
     val input: String,
     val filter: Filter,
-) {
-    companion object {
-        fun empty() = TodosState(emptyList(), "", Filter.All)
-    }
+) : StoreState {
+    override val initial: Any
+        get() = TodosState(emptyList(), "", Filter.All)
+
+//    companion object {
+//        fun empty() = TodosState(emptyList(), "", Filter.All)
+//    }
 
     fun itemsLeft(): Int =
         todos.count { !it.completed }

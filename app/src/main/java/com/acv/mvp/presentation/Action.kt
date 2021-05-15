@@ -1,21 +1,25 @@
 package com.acv.mvp.presentation
 
+import com.acv.mvp.redux.Action
 import com.acv.mvp.ui.compose.Filter
 import com.acv.mvp.ui.compose.Todo
 
-sealed class Action
-object LoadTodos : Action()
+sealed class TodoAction : Action
+object LoadTodos : TodoAction()
 data class LoadTodosSuccess(
     val todos: List<Todo>
-) : Action()
+) : TodoAction()
 
 data class InputChange(
     val text: String,
-) : Action()
+) : TodoAction()
 
-data class AddTodo(val text: String) : Action()
-object ClearCompleted : Action()
-object CompleteAll : Action()
-data class CompleteTodo(val selectedId: Int) : Action()
-data class ActivateTodo(val selectedId: Int) : Action()
-data class FilterBy(val filter: Filter) : Action()
+data class AddTodo(val text: String) : TodoAction()
+object ClearCompleted : TodoAction()
+object CompleteAll : TodoAction()
+data class CompleteTodo(val selectedId: Int) : TodoAction()
+data class ActivateTodo(val selectedId: Int) : TodoAction()
+data class FilterBy(val filter: Filter) : TodoAction()
+
+//sealed class TodoDetail : TodoAction()
+//data class GetTodo(val id :Int) :Todo

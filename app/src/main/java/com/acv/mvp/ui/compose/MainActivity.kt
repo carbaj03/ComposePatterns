@@ -26,21 +26,26 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.acv.mvp.data.Repository
 import com.acv.mvp.presentation.*
+import com.acv.mvp.redux.Action
+import com.acv.mvp.redux.Reducer
+import com.acv.mvp.redux.SideEffect
 import com.acv.mvp.ui.compose.theme.MvpTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class StoreFactory(
-    private val sideEffects: List<SideEffect<Action>>,
-    private val reducer: Reducer<TodosState, Action>,
+class StoreFactory<A : Action, S : StoreState>(
+    private val sideEffects: List<SideEffect<A, S>>,
+    private val reducer: Reducer<S, A>,
+    private val initial: S
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TodosStore::class.java)) {
             return TodosStore(
                 sideEffects = sideEffects,
                 reducer = reducer,
+                initialState = initial
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
@@ -62,35 +67,43 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-val storeFactory = StoreFactory(
-    sideEffects = listOf(
-        TodoSideEffect(
-            repository = Repository(),
-            coroutineContext = Dispatchers.IO + SupervisorJob(),
+val storeFactory: StoreFactory<TodoAction, TodosState> =
+    StoreFactory(
+        sideEffects = listOf(
+            TodoSideEffect(
+                repository = Repository(),
+                coroutineContext = Dispatchers.IO + SupervisorJob(),
+            ),
+            LoggerSideEffect(
+                coroutineContext = Dispatchers.IO + SupervisorJob(),
+            )
         ),
-        LoggerSideEffect()
-    ),
-    reducer = combineReducers(TodoReducer)
-)
+        reducer = TodoReducer,
+        initial = TodosState(
+            todos = emptyList(),
+            input = "",
+            filter = Filter.All,
+        )
+    )
 
 @Composable
 fun <A> useSelector(f: (TodosState) -> A): State<A> {
-    val store: TodosStore = viewModel(factory = storeFactory)
+    val store: TodosStore<TodoAction, TodosState> = viewModel(factory = storeFactory)
     val selector: Flow<A> = store.state.map { f(it) }
     return selector.collectAsState(f(store.state.value))
 }
 
 @Composable
-fun useDispatch(): State<(Action) -> Unit> {
-    val store: TodosStore = viewModel(factory = storeFactory)
-    return remember { mutableStateOf({ action: Action -> store.dispatch(action) }) }
+fun <A : Action> useDispatch(): State<(A) -> Unit> {
+    val store: TodosStore<A, TodosState> = viewModel(factory = storeFactory)
+    return remember { mutableStateOf({ action: A -> store.dispatch(action) }) }
 }
 
 @Composable
 fun App() {
     val todos by useSelector { it.filterBy() }
     val itemsLeft by useSelector { it.itemsLeft() }
-    val dispatcher by useDispatch()
+    val dispatcher by useDispatch<TodoAction>()
 
     Column {
         Header()
@@ -111,7 +124,7 @@ fun App() {
 fun Header() {
     Log.e("Compose", "Header1")
     val text by useSelector { it.input }
-    val dispatcher by useDispatch()
+    val dispatcher by useDispatch<TodoAction>()
 
     TextField(
         modifier = Modifier.fillMaxWidth(),
@@ -159,7 +172,8 @@ fun Footer(
     count: Int,
 ) {
     Log.e("Compose", "Footer")
-    val dispatcher by useDispatch()
+    val dispatcher by useDispatch<TodoAction>()
+
     Column {
         Button(onClick = { dispatcher(CompleteAll) }) {
             Text("Mark All Completed")
@@ -185,7 +199,7 @@ fun RemainingTodos(count: Int) {
 fun StatusFilter() {
     Log.e("Compose", "StatusFilter")
     val currentFilter by useSelector { it.filter }
-    val dispatcher by useDispatch()
+    val dispatcher by useDispatch<TodoAction>()
 
     val color: (Filter) -> Color = { filter: Filter ->
         if (filter == currentFilter) Color.LightGray else Color.Transparent

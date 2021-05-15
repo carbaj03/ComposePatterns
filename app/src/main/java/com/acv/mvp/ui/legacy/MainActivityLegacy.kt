@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import com.acv.mvp.databinding.MainBinding
+import com.acv.mvp.presentation.TodoAction
+import com.acv.mvp.presentation.TodosState
 import com.acv.mvp.presentation.TodosStore
 
 class MainActivityLegacy : ComponentActivity() {
@@ -12,7 +14,7 @@ class MainActivityLegacy : ComponentActivity() {
 
     private val adapter: CustomAdapter = CustomAdapter(mutableListOf())
 
-    private val store by viewModels<TodosStore>()
+    private val store by viewModels<TodosStore<TodoAction, TodosState>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
