@@ -5,22 +5,24 @@ import com.acv.mvp.ui.compose.Filter
 import com.acv.mvp.ui.compose.Todo
 
 sealed class TodoAction : Action
-object LoadTodos : TodoAction()
+
+sealed class TodoListAction : TodoAction()
+object LoadTodos : TodoListAction()
 data class LoadTodosSuccess(
     val todos: List<Todo>
-) : TodoAction()
+) : TodoListAction()
 
 data class InputChange(
     val text: String,
-) : TodoAction()
+) : TodoListAction()
 
-data class AddTodo(val text: String) : TodoAction()
-object ClearCompleted : TodoAction()
-object CompleteAll : TodoAction()
-data class CompleteTodo(val selectedId: Int) : TodoAction()
-data class ActivateTodo(val selectedId: Int) : TodoAction()
-data class FilterBy(val filter: Filter) : TodoAction()
-data class ShowDetail(val id: Int) : TodoAction()
+data class AddTodo(val text: String) : TodoListAction()
+object ClearCompleted : TodoListAction()
+object CompleteAll : TodoListAction()
+data class CompleteTodo(val selectedId: Int) : TodoListAction()
+data class ActivateTodo(val selectedId: Int) : TodoListAction()
+data class FilterBy(val filter: Filter) : TodoListAction()
+data class ShowDetail(val id: Int) : TodoListAction()
 
-sealed class TodoDetailAction : Action
+sealed class TodoDetailAction : TodoAction()
 data class GetTodo(val id: Int) : TodoDetailAction()

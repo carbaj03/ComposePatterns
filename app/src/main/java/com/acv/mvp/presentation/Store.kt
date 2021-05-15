@@ -21,47 +21,52 @@ abstract class Store<S : StoreState, A : Action> : ViewModel() {
     abstract fun dispatch(action: A)
 }
 
-val TodoReducer: Reducer<TodosState, TodoAction> =
-    Reducer { state, action ->
-        with(state) {
-            when (action) {
-                is LoadTodos -> this
-                is LoadTodosSuccess -> copy(todos = todos)
-                is AddTodo -> copy(
-                    todos = todos.plus(
-                        Todo(
-                            id = todos.size + 1,
-                            text = action.text,
-                            completed = false,
-                        )
+val TodoDetailReducer: Reducer<TodosState> =
+    Reducer<TodosState, TodoDetailAction> { action ->
+        when (action) {
+            is GetTodo -> this
+        }
+    }
+
+val TodoReducer: Reducer<TodosState> =
+    Reducer<TodosState, TodoListAction> { action ->
+        when (action) {
+            is LoadTodos -> this
+            is LoadTodosSuccess -> copy(todos = todos)
+            is AddTodo -> copy(
+                todos = todos.plus(
+                    Todo(
+                        id = todos.size + 1,
+                        text = action.text,
+                        completed = false,
                     )
                 )
-                is InputChange -> copy(
-                    input = action.text
+            )
+            is InputChange -> copy(
+                input = action.text
+            )
+            is ClearCompleted -> copy(
+                todos = todos.filterNot { it.completed }
+            )
+            is CompleteAll -> copy(
+                todos = todos.map { it.copy(completed = true) }
+            )
+            is CompleteTodo -> copy(
+                todos = todos.update(
+                    condition = { id == action.selectedId },
+                    transform = { copy(completed = true) }
                 )
-                is ClearCompleted -> copy(
-                    todos = todos.filterNot { it.completed }
+            )
+            is ActivateTodo -> copy(
+                todos = todos.update(
+                    condition = { id == action.selectedId },
+                    transform = { copy(completed = false) }
                 )
-                is CompleteAll -> copy(
-                    todos = todos.map { it.copy(completed = true) }
-                )
-                is CompleteTodo -> copy(
-                    todos = todos.update(
-                        condition = { id == action.selectedId },
-                        transform = { copy(completed = true) }
-                    )
-                )
-                is ActivateTodo -> copy(
-                    todos = todos.update(
-                        condition = { id == action.selectedId },
-                        transform = { copy(completed = false) }
-                    )
-                )
-                is FilterBy -> copy(
-                    filter = action.filter
-                )
-                is ShowDetail -> copy()
-            }
+            )
+            is FilterBy -> copy(
+                filter = action.filter
+            )
+            is ShowDetail -> copy(navigation = TodoDetail(action.id))
         }
     }
 
@@ -96,7 +101,7 @@ class LoggerSideEffect(
 
 class TodosStore<A : Action, S : StoreState>(
     private val sideEffects: List<SideEffect<A, S>>,
-    private val reducer: Reducer<S, A>,
+    private val reducer: Reducer<S>,
     initialState: S
 ) : Store<S, A>() {
     override val state: MutableStateFlow<S> =

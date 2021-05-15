@@ -32,6 +32,7 @@ import com.acv.mvp.presentation.*
 import com.acv.mvp.redux.Action
 import com.acv.mvp.redux.Reducer
 import com.acv.mvp.redux.SideEffect
+import com.acv.mvp.redux.combineReducers
 import com.acv.mvp.ui.compose.theme.MvpTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,7 +41,7 @@ import kotlinx.coroutines.flow.map
 
 class StoreFactory<A : Action, S : StoreState>(
     private val sideEffects: List<SideEffect<A, S>>,
-    private val reducer: Reducer<S, A>,
+    private val reducer: Reducer<S>,
     private val initial: S
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
@@ -70,18 +71,24 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+val reducers: Reducer<TodosState> =
+    combineReducers(TodoReducer, TodoDetailReducer)
+
+val effects: List<SideEffect<TodoAction, TodosState>> =
+    listOf(
+        TodoSideEffect(
+            repository = Repository(),
+            coroutineContext = Dispatchers.IO + SupervisorJob(),
+        ),
+        LoggerSideEffect(
+            coroutineContext = Dispatchers.IO + SupervisorJob(),
+        )
+    )
+
 val storeFactory: StoreFactory<TodoAction, TodosState> =
     StoreFactory(
-        sideEffects = listOf(
-            TodoSideEffect(
-                repository = Repository(),
-                coroutineContext = Dispatchers.IO + SupervisorJob(),
-            ),
-            LoggerSideEffect(
-                coroutineContext = Dispatchers.IO + SupervisorJob(),
-            )
-        ),
-        reducer = TodoReducer,
+        sideEffects = effects,
+        reducer = reducers,
         initial = TodosState.initalState()
     )
 
@@ -123,7 +130,7 @@ fun TodoDetailScreen(id: Int) {
 fun TodoListScreen() {
     val todos by useSelector { it.filterBy() }
     val itemsLeft by useSelector { it.itemsLeft() }
-    val dispatcher by useDispatch<TodoAction>()
+    val dispatcher by useDispatch<TodoListAction>()
 
     Column {
         Header()
@@ -144,7 +151,7 @@ fun TodoListScreen() {
 fun Header() {
     Log.e("Compose", "Header1")
     val text by useSelector { it.input }
-    val dispatcher by useDispatch<TodoAction>()
+    val dispatcher by useDispatch<TodoListAction>()
 
     TextField(
         modifier = Modifier.fillMaxWidth(),
@@ -170,7 +177,7 @@ fun TodoList(
     onItemSelected: (Boolean, Todo) -> Unit,
 ) {
     Log.e("Compose", "TodoList")
-    val dispatcher by useDispatch<TodoAction>()
+    val dispatcher by useDispatch<TodoListAction>()
 
     LazyColumn {
         items(todos) { todo ->
@@ -198,7 +205,7 @@ fun Footer(
     count: Int,
 ) {
     Log.e("Compose", "Footer")
-    val dispatcher by useDispatch<TodoAction>()
+    val dispatcher by useDispatch<TodoListAction>()
 
     Column {
         Button(onClick = { dispatcher(CompleteAll) }) {
@@ -225,7 +232,7 @@ fun RemainingTodos(count: Int) {
 fun StatusFilter() {
     Log.e("Compose", "StatusFilter")
     val currentFilter by useSelector { it.filter }
-    val dispatcher by useDispatch<TodoAction>()
+    val dispatcher by useDispatch<TodoListAction>()
 
     val color: (Filter) -> Color = { filter: Filter ->
         if (filter == currentFilter) Color.LightGray else Color.Transparent

@@ -3,16 +3,30 @@ package com.acv.mvp.redux
 import com.acv.mvp.presentation.StoreState
 
 
-fun interface Reducer<S : StoreState, A : Action> {
-    operator fun invoke(state: S, action: A): S
+fun interface Reducer<S : StoreState> {
+    operator fun invoke(state: S, action: Action): S
 }
 
-fun <S : StoreState, A : Action> combineReducers(vararg reducers: Reducer<S, A>): Reducer<S, A> =
+fun interface ReducerType<S : StoreState, A : Action> {
+    operator fun S.invoke(action: A): S
+}
+
+inline fun <S : StoreState, reified A : Action> Reducer(
+    reducer: ReducerType<S, A>
+): Reducer<S> =
+    Reducer { state, action ->
+        when (action) {
+            is A -> reducer.run { state(action) }
+            else -> state
+        }
+    }
+
+fun <S : StoreState> combineReducers(vararg reducers: Reducer<S>): Reducer<S> =
     Reducer { state, action ->
         reducers.fold(state, { s, reducer -> reducer(s, action) })
     }
 
-operator fun <S : StoreState, A : Action> Reducer<S, A>.plus(other: Reducer<S, A>): Reducer<S, A> =
-    Reducer { s, a ->
-        other(this(s, a), a)
+operator fun <S : StoreState> Reducer<S>.plus(other: Reducer<S>): Reducer<S> =
+    Reducer { state, action ->
+        other(this(state, action), action)
     }
