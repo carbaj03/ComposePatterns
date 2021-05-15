@@ -100,20 +100,45 @@ fun <A : Action> useDispatch(): State<(A) -> Unit> {
 
 @Composable
 fun App() {
+    when (val navigator = useSelector { it.navigation }.value) {
+        is TodoDetail -> TodoDetailScreen(navigator.id)
+        is TodoList -> TodoListScreen()
+    }
+}
+
+@Composable
+fun TodoDetailScreen(id: Int) {
+    val dispatcher by useDispatch<TodoDetailAction>()
+    val todo by useSelector { it.detail }
+    dispatcher(GetTodo(id))
+
+
+    Column {
+        Text(text = todo?.text.toString())
+        Text(text = todo?.completed.toString())
+    }
+}
+
+@Composable
+fun TodoListScreen() {
     val todos by useSelector { it.filterBy() }
     val itemsLeft by useSelector { it.itemsLeft() }
     val dispatcher by useDispatch<TodoAction>()
 
-    val navigation by useSelector { it.navigation }
+    Column {
+        Header()
 
-    when (navigation) {
-        is TodoDetail -> TODO()
-        is TodoList -> {
+        TodoList(
+            todos = todos,
+            onItemSelected = { isCompleted, todo ->
+                if (isCompleted) dispatcher(CompleteTodo(todo.id))
+                else dispatcher(ActivateTodo(todo.id))
+            }
+        )
 
-        }
+        Footer(count = itemsLeft)
     }
 }
-
 
 @Composable
 fun Header() {

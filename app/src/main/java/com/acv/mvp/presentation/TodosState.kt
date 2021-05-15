@@ -8,13 +8,15 @@ data class TodosState(
     val todos: List<Todo>,
     val input: String,
     val filter: Filter,
+    val detail: Todo?,
 ) : StoreState {
     companion object {
         fun initalState() = TodosState(
             navigation = TodoList,
             todos = emptyList(),
             input = "",
-            filter = Filter.All
+            filter = Filter.All,
+            detail = null,
         )
     }
 
