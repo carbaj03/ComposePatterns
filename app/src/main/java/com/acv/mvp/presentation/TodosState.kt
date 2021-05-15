@@ -4,16 +4,19 @@ import com.acv.mvp.ui.compose.Filter
 import com.acv.mvp.ui.compose.Todo
 
 data class TodosState(
+    val navigation: Navigation,
     val todos: List<Todo>,
     val input: String,
     val filter: Filter,
 ) : StoreState {
-    override val initial: Any
-        get() = TodosState(emptyList(), "", Filter.All)
-
-//    companion object {
-//        fun empty() = TodosState(emptyList(), "", Filter.All)
-//    }
+    companion object {
+        fun initalState() = TodosState(
+            navigation = TodoList,
+            todos = emptyList(),
+            input = "",
+            filter = Filter.All
+        )
+    }
 
     fun itemsLeft(): Int =
         todos.count { !it.completed }

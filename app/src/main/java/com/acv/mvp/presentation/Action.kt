@@ -20,6 +20,7 @@ object CompleteAll : TodoAction()
 data class CompleteTodo(val selectedId: Int) : TodoAction()
 data class ActivateTodo(val selectedId: Int) : TodoAction()
 data class FilterBy(val filter: Filter) : TodoAction()
+data class ShowDetail(val id: Int) : TodoAction()
 
-//sealed class TodoDetail : TodoAction()
-//data class GetTodo(val id :Int) :Todo
+sealed class TodoDetailAction : Action
+data class GetTodo(val id: Int) : TodoDetailAction()

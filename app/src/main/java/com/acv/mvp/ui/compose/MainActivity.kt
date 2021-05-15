@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -18,12 +19,14 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.acv.mvp.R
 import com.acv.mvp.data.Repository
 import com.acv.mvp.presentation.*
 import com.acv.mvp.redux.Action
@@ -79,11 +82,7 @@ val storeFactory: StoreFactory<TodoAction, TodosState> =
             )
         ),
         reducer = TodoReducer,
-        initial = TodosState(
-            todos = emptyList(),
-            input = "",
-            filter = Filter.All,
-        )
+        initial = TodosState.initalState()
     )
 
 @Composable
@@ -105,20 +104,16 @@ fun App() {
     val itemsLeft by useSelector { it.itemsLeft() }
     val dispatcher by useDispatch<TodoAction>()
 
-    Column {
-        Header()
+    val navigation by useSelector { it.navigation }
 
-        TodoList(
-            todos = todos,
-            onItemSelected = { isCompleted, todo ->
-                if (isCompleted) dispatcher(CompleteTodo(todo.id))
-                else dispatcher(ActivateTodo(todo.id))
-            }
-        )
+    when (navigation) {
+        is TodoDetail -> TODO()
+        is TodoList -> {
 
-        Footer(count = itemsLeft)
+        }
     }
 }
+
 
 @Composable
 fun Header() {
@@ -150,10 +145,11 @@ fun TodoList(
     onItemSelected: (Boolean, Todo) -> Unit,
 ) {
     Log.e("Compose", "TodoList")
+    val dispatcher by useDispatch<TodoAction>()
+
     LazyColumn {
         items(todos) { todo ->
             Row {
-
                 Text(
                     text = todo.text,
                     color = if (todo.completed) Color.Black else Color.LightGray
@@ -161,6 +157,11 @@ fun TodoList(
                 Checkbox(
                     checked = todo.completed,
                     onCheckedChange = { onItemSelected(it, todo) }
+                )
+                Image(
+                    modifier = Modifier.clickable { dispatcher(ShowDetail(todo.id)) },
+                    painter = painterResource(R.drawable.ic_eye),
+                    contentDescription = "See Detail of ${todo.text}"
                 )
             }
         }

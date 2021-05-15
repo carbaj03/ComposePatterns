@@ -14,9 +14,7 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 
-interface StoreState {
-    val initial: Any
-}
+interface StoreState
 
 abstract class Store<S : StoreState, A : Action> : ViewModel() {
     abstract val state: StateFlow<S>
@@ -62,10 +60,10 @@ val TodoReducer: Reducer<TodosState, TodoAction> =
                 is FilterBy -> copy(
                     filter = action.filter
                 )
+                is ShowDetail -> copy()
             }
         }
     }
-
 
 class TodoSideEffect(
     private val repository: Repository,
