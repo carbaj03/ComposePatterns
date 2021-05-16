@@ -77,10 +77,14 @@ val reducers: Reducer<TodosState> =
 val effects: List<SideEffect<TodoAction, TodosState>> =
     listOf(
         TodoSideEffect(
-            repository = Repository(),
+            repository = Repository,
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         ),
         LoggerSideEffect(
+            coroutineContext = Dispatchers.IO + SupervisorJob(),
+        ),
+        TodoDetailSideEffect(
+            repository = Repository,
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         )
     )
@@ -115,22 +119,39 @@ fun App() {
 
 @Composable
 fun TodoDetailScreen(id: Int) {
+    Log.e("Compose", "TodoDetailScreen")
     val dispatcher by useDispatch<TodoDetailAction>()
     val todo by useSelector { it.detail }
-    dispatcher(GetTodo(id))
+    val error by useSelector { it.error }
+    val loading by useSelector { it.loading }
 
+    LaunchedEffect(id) { dispatcher(GetTodo(id)) }
 
-    Column {
-        Text(text = todo?.text.toString())
-        Text(text = todo?.completed.toString())
-    }
+    if (error) {
+        Text(text = "ERROR")
+        Button(onClick = { dispatcher(GetTodo(id)) }) {
+            Text(text = "Retry")
+        }
+    } else if (loading)
+        Text(text = "Loading")
+    else
+        Column {
+            Text(text = todo?.text.toString())
+            Text(text = todo?.completed.toString())
+            Button(onClick = { dispatcher(ShowTodos) }) {
+                Text(text = "Back")
+            }
+        }
 }
 
 @Composable
 fun TodoListScreen() {
+    Log.e("Compose", "TodoListScreen")
     val todos by useSelector { it.filterBy() }
     val itemsLeft by useSelector { it.itemsLeft() }
     val dispatcher by useDispatch<TodoListAction>()
+
+    dispatcher(LoadTodos)
 
     Column {
         Header()
