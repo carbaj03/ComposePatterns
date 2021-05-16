@@ -19,6 +19,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -214,7 +215,8 @@ fun TodoList(
                 Image(
                     modifier = Modifier.clickable { dispatcher(ShowDetail(todo.id)) },
                     painter = painterResource(R.drawable.ic_eye),
-                    contentDescription = "See Detail of ${todo.text}"
+                    contentDescription = "See Detail of ${todo.text}",
+                    colorFilter = ColorFilter.tint(color = Color.Blue)
                 )
             }
         }

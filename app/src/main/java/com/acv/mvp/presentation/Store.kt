@@ -31,54 +31,27 @@ val TodoReducer: Reducer<TodosState> =
             is LoadTodos -> this
             is LoadTodosSuccess -> copy(todos = action.todos)
             is LoadTodosError -> copy(error = true)
-            is AddTodo -> copy(
-//                    todos = todos.plus(
-//                        odo(
-//                            id = todos.size + 1,
-//                            text = action.text,
-//                            completed = false,
-//                        )
-//                    )
-            )
-            is AddTodoError -> copy(
-                error = true
-            )
-            is AddTodoSuccess -> copy(
-                todos = action.todos
-            )
-            is InputChange -> copy(
-                input = action.text
-            )
+            is AddTodo -> this
+            is AddTodoError -> copy(error = true)
+            is AddTodoSuccess -> copy(todos = action.todos)
+            is InputChange -> copy(input = action.text)
             is ClearCompleted -> copy(
                 todos = todos.filterNot { it.completed }
             )
-            is CompleteAll -> copy(
-                todos = todos.map { it.copy(completed = true) }
-            )
-            is CompleteTodo -> copy(
-//                todos = todos.update(
-//                    condition = { id == action.selectedId },
-//                    transform = { copy(completed = true) }
-//                )
-            )
-            is CompleteTodoSuccess -> copy(
-                todos = action.todos
-            )
-            is CompleteTodoError -> copy(
-                error = true
-            )
+            is CompleteAll -> this
+            is CompleteAllSuccess -> copy(todos = action.todos)
+            is CompleteAllError -> copy(error = true)
+            is CompleteTodo -> this
+            is CompleteTodoSuccess -> copy(todos = action.todos)
+            is CompleteTodoError -> copy(error = true)
             is ActivateTodo -> copy(
                 todos = todos.update(
                     condition = { id == action.selectedId },
                     transform = { copy(completed = false) }
                 )
             )
-            is FilterBy -> copy(
-                filter = action.filter
-            )
-            is ShowDetail -> copy(
-                navigation = TodoDetail(action.id)
-            )
+            is FilterBy -> copy(filter = action.filter)
+            is ShowDetail -> copy(navigation = TodoDetail(action.id))
         }
     }
 

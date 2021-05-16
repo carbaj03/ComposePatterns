@@ -32,4 +32,10 @@ object Repository {
         )
         return todos
     }
+
+    suspend fun completeAll(): List<Todo>? {
+        delay(3000)
+        todos = todos.map { it.copy(completed = true) }
+        return todos
+    }
 }
