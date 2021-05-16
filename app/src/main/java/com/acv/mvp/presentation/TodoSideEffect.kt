@@ -43,6 +43,11 @@ class TodoSideEffect(
                     todos?.let { store.dispatch(ClearCompletedSuccess(todos)) }
                         ?: store.dispatch(ClearCompletedError)
                 }
+                is ActivateTodo -> {
+                    val todos: List<Todo>? = repository.activateTodo(action.activatedId)
+                    todos?.let { store.dispatch(ActivateTodoSuccess(todos)) }
+                        ?: store.dispatch(ActivateTodoError)
+                }
             }
         }
         return action

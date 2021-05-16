@@ -44,12 +44,9 @@ val TodoReducer: Reducer<TodosState> =
             is CompleteTodo -> this
             is CompleteTodoSuccess -> copy(todos = action.todos)
             is CompleteTodoError -> copy(error = true)
-            is ActivateTodo -> copy(
-                todos = todos.update(
-                    condition = { id == action.selectedId },
-                    transform = { copy(completed = false) }
-                )
-            )
+            is ActivateTodo -> this
+            is ActivateTodoSuccess -> copy(todos = action.todos)
+            is ActivateTodoError -> copy(error = true)
             is FilterBy -> copy(filter = action.filter)
             is ShowDetail -> copy(navigation = TodoDetail(action.id))
         }

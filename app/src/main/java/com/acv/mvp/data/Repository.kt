@@ -44,4 +44,13 @@ object Repository {
         todos = todos.filterNot { it.completed }
         return todos
     }
+
+    suspend fun activateTodo(activatedId: Int): List<Todo>? {
+        delay(3000)
+        todos = todos.update(
+            condition = { id == activatedId },
+            transform = { copy(completed = false) }
+        )
+        return todos
+    }
 }
