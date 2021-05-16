@@ -38,6 +38,11 @@ class TodoSideEffect(
                     todos?.let { store.dispatch(CompleteAllSuccess(todos)) }
                         ?: store.dispatch(CompleteAllError)
                 }
+                is ClearCompleted -> {
+                    val todos: List<Todo>? = repository.clearCompleted()
+                    todos?.let { store.dispatch(ClearCompletedSuccess(todos)) }
+                        ?: store.dispatch(ClearCompletedError)
+                }
             }
         }
         return action

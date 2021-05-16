@@ -38,4 +38,10 @@ object Repository {
         todos = todos.map { it.copy(completed = true) }
         return todos
     }
+
+    suspend fun clearCompleted(): List<Todo>? {
+        delay(3000)
+        todos = todos.filterNot { it.completed }
+        return todos
+    }
 }

@@ -35,9 +35,9 @@ val TodoReducer: Reducer<TodosState> =
             is AddTodoError -> copy(error = true)
             is AddTodoSuccess -> copy(todos = action.todos)
             is InputChange -> copy(input = action.text)
-            is ClearCompleted -> copy(
-                todos = todos.filterNot { it.completed }
-            )
+            is ClearCompleted -> this
+            is ClearCompletedSuccess -> copy(todos = action.todos)
+            is ClearCompletedError -> copy(error = true)
             is CompleteAll -> this
             is CompleteAllSuccess -> copy(todos = action.todos)
             is CompleteAllError -> copy(error = true)
