@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
-class TodoSideEffect(
+class TodoMiddleware(
     private val repository: Repository,
     override val coroutineContext: CoroutineContext,
 ) : Middleware<TodoAction, TodosState>, CoroutineScope {
@@ -56,7 +56,7 @@ class TodoSideEffect(
     }
 }
 
-class TodoDetailSideEffect(
+class TodoDetailMiddleware(
     private val repository: Repository,
     override val coroutineContext: CoroutineContext,
 ) : Middleware<TodoAction, TodosState>, CoroutineScope {
@@ -78,7 +78,7 @@ class TodoDetailSideEffect(
     }
 }
 
-class LoggerSideEffect(
+class LoggerMiddleware(
     override val coroutineContext: CoroutineContext,
 ) : Middleware<TodoAction, TodosState>, CoroutineScope {
     override fun invoke(

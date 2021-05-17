@@ -112,14 +112,14 @@ val reducers: Reducer<TodosState> =
 
 val effects: List<Middleware<TodoAction, TodosState>> =
     listOf(
-        TodoSideEffect(
+        TodoMiddleware(
             repository = Repository,
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         ),
-        LoggerSideEffect(
+        LoggerMiddleware(
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         ),
-        TodoDetailSideEffect(
+        TodoDetailMiddleware(
             repository = Repository,
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         )

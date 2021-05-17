@@ -61,7 +61,7 @@ val TodoReducer: Reducer<TodosState> =
 
 class TodosStore<A : Action, S : StoreState>(
     private val reducer: Reducer<S>,
-    middlewares: List<Middleware<A, S>>,
+    private val middlewares: List<Middleware<A, S>>,
     initialState: S
 ) : Store<S, A>() {
     private val initialDispatcher =
@@ -79,6 +79,34 @@ class TodosStore<A : Action, S : StoreState>(
         MutableStateFlow(initialState)
 
     override fun dispatch(action: A) {
+        val next3 = Dispatcher<A> { action ->
+            state.value = state.value.reduce(action)
+            action
+        }
+        val next2 = Dispatcher<A> { action1 ->
+            middlewares[2](
+                store = this,
+                action = action1,
+                next = next3
+            )
+        }
+        val next1 = Dispatcher<A> { action0 ->
+            middlewares[1](
+                store = this,
+                action = action0,
+                next = next2
+
+            )
+        }
+        val next0 = Dispatcher<A> { action ->
+            middlewares[0](
+                store = this,
+                action = action,
+                next = next1
+            )
+        }
+        next0(action)
+
         dispatcher(action)
     }
 
