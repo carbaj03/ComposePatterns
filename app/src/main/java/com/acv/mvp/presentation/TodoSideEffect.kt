@@ -15,7 +15,7 @@ class TodoSideEffect(
     override fun invoke(
         action: TodoAction,
         store: Store<TodosState, TodoAction>
-    ): TodoAction {
+    ) {
         launch {
             when (action) {
                 is LoadTodos -> {
@@ -50,7 +50,6 @@ class TodoSideEffect(
                 }
             }
         }
-        return action
     }
 }
 
@@ -61,7 +60,7 @@ class TodoDetailSideEffect(
     override fun invoke(
         action: TodoAction,
         store: Store<TodosState, TodoAction>
-    ): TodoAction {
+    ) {
         launch {
             when (action) {
                 is GetTodo -> {
@@ -71,21 +70,15 @@ class TodoDetailSideEffect(
                 }
             }
         }
-        return action
     }
 }
 
-class LoggerSideEffect(
-    override val coroutineContext: CoroutineContext,
-) : SideEffect<TodoAction, TodosState>, CoroutineScope {
+class LoggerSideEffect : SideEffect<TodoAction, TodosState> {
     override fun invoke(
         action: TodoAction,
         store: Store<TodosState, TodoAction>
-    ): TodoAction {
-        launch {
-//            Log.e("oldState", store.state.value.toString())
-            Log.e("logger", action.toString())
-        }
-        return action
+    ) {
+        Log.e("Current State", store.state.value.toString())
+        Log.e("Action", action.toString())
     }
 }

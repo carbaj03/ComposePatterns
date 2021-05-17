@@ -81,13 +81,11 @@ val effects: List<SideEffect<TodoAction, TodosState>> =
             repository = Repository,
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         ),
-        LoggerSideEffect(
-            coroutineContext = Dispatchers.IO + SupervisorJob(),
-        ),
         TodoDetailSideEffect(
             repository = Repository,
             coroutineContext = Dispatchers.IO + SupervisorJob(),
-        )
+        ),
+        LoggerSideEffect(),
     )
 
 val storeFactory: StoreFactory<TodoAction, TodosState> =
