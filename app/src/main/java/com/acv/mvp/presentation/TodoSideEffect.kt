@@ -2,7 +2,8 @@ package com.acv.mvp.presentation
 
 import android.util.Log
 import com.acv.mvp.data.Repository
-import com.acv.mvp.redux.SideEffect
+import com.acv.mvp.redux.Dispatcher
+import com.acv.mvp.redux.Middleware
 import com.acv.mvp.ui.compose.Todo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -11,10 +12,11 @@ import kotlin.coroutines.CoroutineContext
 class TodoSideEffect(
     private val repository: Repository,
     override val coroutineContext: CoroutineContext,
-) : SideEffect<TodoAction, TodosState>, CoroutineScope {
+) : Middleware<TodoAction, TodosState>, CoroutineScope {
     override fun invoke(
+        store: Store<TodosState, TodoAction>,
+        next: Dispatcher<TodoAction>,
         action: TodoAction,
-        store: Store<TodosState, TodoAction>
     ): TodoAction {
         launch {
             when (action) {
@@ -50,17 +52,18 @@ class TodoSideEffect(
                 }
             }
         }
-        return action
+        return next(action)
     }
 }
 
 class TodoDetailSideEffect(
     private val repository: Repository,
     override val coroutineContext: CoroutineContext,
-) : SideEffect<TodoAction, TodosState>, CoroutineScope {
+) : Middleware<TodoAction, TodosState>, CoroutineScope {
     override fun invoke(
+        store: Store<TodosState, TodoAction>,
+        next: Dispatcher<TodoAction>,
         action: TodoAction,
-        store: Store<TodosState, TodoAction>
     ): TodoAction {
         launch {
             when (action) {
@@ -71,21 +74,21 @@ class TodoDetailSideEffect(
                 }
             }
         }
-        return action
+        return next(action)
     }
 }
 
 class LoggerSideEffect(
     override val coroutineContext: CoroutineContext,
-) : SideEffect<TodoAction, TodosState>, CoroutineScope {
+) : Middleware<TodoAction, TodosState>, CoroutineScope {
     override fun invoke(
+        store: Store<TodosState, TodoAction>,
+        next: Dispatcher<TodoAction>,
         action: TodoAction,
-        store: Store<TodosState, TodoAction>
     ): TodoAction {
         launch {
-//            Log.e("oldState", store.state.value.toString())
             Log.e("logger", action.toString())
         }
-        return action
+        return next(action)
     }
 }

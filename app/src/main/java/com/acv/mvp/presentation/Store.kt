@@ -2,8 +2,9 @@ package com.acv.mvp.presentation
 
 import androidx.lifecycle.ViewModel
 import com.acv.mvp.redux.Action
+import com.acv.mvp.redux.Dispatcher
+import com.acv.mvp.redux.Middleware
 import com.acv.mvp.redux.Reducer
-import com.acv.mvp.redux.SideEffect
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -13,6 +14,12 @@ interface StoreState
 abstract class Store<S : StoreState, A : Action> : ViewModel() {
     abstract val state: StateFlow<S>
     abstract fun dispatch(action: A)
+}
+
+interface StoreCreator<A : Action, S : StoreState> {
+    val reducer: Reducer<S>
+    val initialState: S
+    val middlewares: List<Middleware<A, S>>
 }
 
 val TodoDetailReducer: Reducer<TodosState> =
@@ -53,16 +60,26 @@ val TodoReducer: Reducer<TodosState> =
     }
 
 class TodosStore<A : Action, S : StoreState>(
-    private val sideEffects: List<SideEffect<A, S>>,
     private val reducer: Reducer<S>,
+    middlewares: List<Middleware<A, S>>,
     initialState: S
 ) : Store<S, A>() {
+    private val initialDispatcher =
+        Dispatcher<A> { action ->
+            state.value = state.value.reduce(action)
+            action
+        }
+
+    private val dispatcher: Dispatcher<A> =
+        middlewares.foldRight(initialDispatcher) { m, acc ->
+            Dispatcher { m(this, acc, it) }
+        }
+
     override val state: MutableStateFlow<S> =
         MutableStateFlow(initialState)
 
     override fun dispatch(action: A) {
-        state.value = state.value.reduce(action)
-        sideEffects.forEach { it(action, this) }
+        dispatcher(action)
     }
 
     private fun S.reduce(action: A): S =

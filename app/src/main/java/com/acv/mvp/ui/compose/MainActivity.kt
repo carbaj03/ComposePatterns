@@ -31,8 +31,8 @@ import com.acv.mvp.R
 import com.acv.mvp.data.Repository
 import com.acv.mvp.presentation.*
 import com.acv.mvp.redux.Action
+import com.acv.mvp.redux.Middleware
 import com.acv.mvp.redux.Reducer
-import com.acv.mvp.redux.SideEffect
 import com.acv.mvp.redux.combineReducers
 import com.acv.mvp.ui.compose.theme.MvpTheme
 import kotlinx.coroutines.Dispatchers
@@ -41,20 +41,40 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class StoreFactory<A : Action, S : StoreState>(
-    private val sideEffects: List<SideEffect<A, S>>,
-    private val reducer: Reducer<S>,
-    private val initial: S
-) : ViewModelProvider.Factory {
+    override val reducer: Reducer<S>,
+    override val initialState: S,
+    override val middlewares: List<Middleware<A, S>>,
+) : ViewModelProvider.Factory, StoreCreator<A, S> {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TodosStore::class.java)) {
-            return TodosStore(
-                sideEffects = sideEffects,
-                reducer = reducer,
-                initialState = initial
-            ) as T
+            return createStore(reducer, initialState, middlewares) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
+}
+
+
+fun <A : Action, S : StoreState> createStore(
+    reducer: Reducer<S>,
+    preloadedState: S,
+    middlewares: List<Middleware<A, S>>,
+): Store<S, A> {
+//    if (middlewares.isNotEmpty()) {
+//        return createStore<A, S>(reducer, preloadedState, emptyList())
+//
+//        return enhancer { r, initialState, _ -> createStore(r, initialState) }(
+//            reducer,
+//            preloadedState,
+//            null
+//        )
+//    }
+
+    return TodosStore<A, S>(
+//                sideEffects = sideEffects,
+        middlewares = middlewares,
+        reducer = reducer,
+        initialState = preloadedState
+    )
 }
 
 class MainActivity : ComponentActivity() {
@@ -75,7 +95,22 @@ class MainActivity : ComponentActivity() {
 val reducers: Reducer<TodosState> =
     combineReducers(TodoReducer, TodoDetailReducer)
 
-val effects: List<SideEffect<TodoAction, TodosState>> =
+//val effects: List<Middleware<TodoAction, TodosState>> =
+//    listOf(
+//        TodoSideEffect(
+//            repository = Repository,
+//            coroutineContext = Dispatchers.IO + SupervisorJob(),
+//        ),
+//        LoggerSideEffect(
+//            coroutineContext = Dispatchers.IO + SupervisorJob(),
+//        ),
+//        TodoDetailSideEffect(
+//            repository = Repository,
+//            coroutineContext = Dispatchers.IO + SupervisorJob(),
+//        )
+//    )
+
+val effects: List<Middleware<TodoAction, TodosState>> =
     listOf(
         TodoSideEffect(
             repository = Repository,
@@ -92,9 +127,10 @@ val effects: List<SideEffect<TodoAction, TodosState>> =
 
 val storeFactory: StoreFactory<TodoAction, TodosState> =
     StoreFactory(
-        sideEffects = effects,
+//        sideEffects = effects,
         reducer = reducers,
-        initial = TodosState.initalState()
+        initialState = TodosState.initalState(),
+        middlewares = effects
     )
 
 @Composable
