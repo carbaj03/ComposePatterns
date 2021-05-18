@@ -2,22 +2,21 @@ package com.acv.mvp.presentation
 
 import android.util.Log
 import com.acv.mvp.data.Repository
-import com.acv.mvp.redux.Dispatcher
-import com.acv.mvp.redux.Middleware
+import com.acv.mvp.redux.*
 import com.acv.mvp.ui.compose.Todo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
-class TodoMiddleware(
+class TodoListMiddleware(
     private val repository: Repository,
     override val coroutineContext: CoroutineContext,
-) : Middleware<TodoAction, TodosState>, CoroutineScope {
+) : Middleware<Action, TodosState>, CoroutineScope {
     override fun invoke(
-        store: Store<TodosState, TodoAction>,
-        next: Dispatcher<TodoAction>,
-        action: TodoAction,
-    ): TodoAction {
+        store: Store<TodosState, Action>,
+        next: Dispatcher<Action>,
+        action: Action,
+    ): Action {
         launch {
             when (action) {
                 is LoadTodos -> {
@@ -59,14 +58,15 @@ class TodoMiddleware(
 class TodoDetailMiddleware(
     private val repository: Repository,
     override val coroutineContext: CoroutineContext,
-) : Middleware<TodoAction, TodosState>, CoroutineScope {
+) : Middleware<Action, TodosState>, CoroutineScope {
     override fun invoke(
-        store: Store<TodosState, TodoAction>,
-        next: Dispatcher<TodoAction>,
-        action: TodoAction,
-    ): TodoAction {
+        store: Store<TodosState, Action>,
+        next: Dispatcher<Action>,
+        action: Action,
+    ): Action {
         launch {
             when (action) {
+                is
                 is GetTodo -> {
                     val todo: Todo? = repository.getBy(action.id)
                     todo?.let { store.dispatch(GetTodoSuccess(todo)) }
@@ -80,15 +80,38 @@ class TodoDetailMiddleware(
 
 class LoggerMiddleware(
     override val coroutineContext: CoroutineContext,
-) : Middleware<TodoAction, TodosState>, CoroutineScope {
+) : Middleware<Action, TodosState>, CoroutineScope {
     override fun invoke(
-        store: Store<TodosState, TodoAction>,
-        next: Dispatcher<TodoAction>,
-        action: TodoAction,
-    ): TodoAction {
+        store: Store<TodosState, Action>,
+        next: Dispatcher<Action>,
+        action: Action,
+    ): Action {
         launch {
             Log.e("logger", action.toString())
         }
         return next(action)
+    }
+}
+
+val ThunkMiddleware = Middleware<Action, TodosState> { store, next, action ->
+    if (action is AsyncAction) {
+        action(state = store.state.value, dispatcher = next)
+        NoAction
+    } else {
+        next(action)
+    }
+}
+
+class TodoThunks(
+    repository: Repository,
+    override val coroutineContext: CoroutineContext,
+) : CoroutineScope {
+    val TodoAll = AsyncAction { _, dispatcher ->
+        launch {
+            dispatcher(LoadTodos)
+            val todos = repository.getAll()
+            todos?.let { dispatcher(LoadTodosSuccess(todos)) }
+                ?: dispatcher(LoadTodosError)
+        }
     }
 }

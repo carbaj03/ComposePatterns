@@ -69,7 +69,7 @@ fun <A : Action, S : StoreState> createStore(
 //        )
 //    }
 
-    return TodosStore<A, S>(
+    return TodosStore(
 //                sideEffects = sideEffects,
         middlewares = middlewares,
         reducer = reducer,
@@ -92,6 +92,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+val TodoThunks = TodoThunks(
+    repository = Repository,
+    coroutineContext = Dispatchers.IO + SupervisorJob(),
+)
+
 val reducers: Reducer<TodosState> =
     combineReducers(TodoReducer, TodoDetailReducer)
 
@@ -110,9 +115,10 @@ val reducers: Reducer<TodosState> =
 //        )
 //    )
 
-val effects: List<Middleware<TodoAction, TodosState>> =
+val effects: List<Middleware<Action, TodosState>> =
     listOf(
-        TodoMiddleware(
+        ThunkMiddleware,
+        TodoListMiddleware(
             repository = Repository,
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         ),
@@ -122,15 +128,15 @@ val effects: List<Middleware<TodoAction, TodosState>> =
         TodoDetailMiddleware(
             repository = Repository,
             coroutineContext = Dispatchers.IO + SupervisorJob(),
-        )
+        ),
     )
 
-val storeFactory: StoreFactory<TodoAction, TodosState> =
+val storeFactory: StoreFactory<Action, TodosState> =
     StoreFactory(
 //        sideEffects = effects,
         reducer = reducers,
         initialState = TodosState.initalState(),
-        middlewares = effects
+        middlewares = effects,
     )
 
 @Composable
@@ -181,14 +187,15 @@ fun TodoDetailScreen(id: Int) {
         }
 }
 
+
 @Composable
 fun TodoListScreen() {
     Log.e("Compose", "TodoListScreen")
     val todos by useSelector { it.filterBy() }
     val itemsLeft by useSelector { it.itemsLeft() }
-    val dispatcher by useDispatch<TodoListAction>()
+    val dispatcher by useDispatch<Action>()
 
-    dispatcher(LoadTodos)
+    dispatcher(TodoThunks.TodoAll)
 
     Column {
         Header()

@@ -62,7 +62,7 @@ val TodoReducer: Reducer<TodosState> =
 class TodosStore<A : Action, S : StoreState>(
     private val reducer: Reducer<S>,
     middlewares: List<Middleware<A, S>>,
-    initialState: S
+    initialState: S,
 ) : Store<S, A>() {
     private val initialDispatcher =
         Dispatcher<A> { action ->
