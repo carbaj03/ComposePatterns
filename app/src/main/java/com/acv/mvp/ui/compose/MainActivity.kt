@@ -30,10 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.acv.mvp.R
 import com.acv.mvp.data.Repository
 import com.acv.mvp.presentation.*
-import com.acv.mvp.redux.Action
-import com.acv.mvp.redux.Middleware
-import com.acv.mvp.redux.Reducer
-import com.acv.mvp.redux.combineReducers
+import com.acv.mvp.redux.*
 import com.acv.mvp.ui.compose.theme.MvpTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -43,8 +40,8 @@ import kotlinx.coroutines.flow.map
 class StoreFactory<A : Action, S : StoreState>(
     override val reducer: Reducer<S>,
     override val initialState: S,
-    override val middlewares: List<Middleware<A, S>>,
-) : ViewModelProvider.Factory, StoreCreator<A, S> {
+    override val middlewares: List<Middleware<S, A>>,
+) : ViewModelProvider.Factory, StoreCreator<S, A> {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TodosStore::class.java)) {
             return createStore(reducer, initialState, middlewares) as T
@@ -57,7 +54,7 @@ class StoreFactory<A : Action, S : StoreState>(
 fun <A : Action, S : StoreState> createStore(
     reducer: Reducer<S>,
     preloadedState: S,
-    middlewares: List<Middleware<A, S>>,
+    middlewares: List<Middleware<S, A>>,
 ): Store<S, A> {
 //    if (middlewares.isNotEmpty()) {
 //        return createStore<A, S>(reducer, preloadedState, emptyList())
@@ -115,13 +112,13 @@ val reducers: Reducer<TodosState> =
 //        )
 //    )
 
-val effects: List<Middleware<Action, TodosState>> =
+val effects: List<Middleware<TodosState, Action>> =
     listOf(
-        ThunkMiddleware,
-        TodoListMiddleware(
-            repository = Repository,
-            coroutineContext = Dispatchers.IO + SupervisorJob(),
-        ),
+        ThunkMiddleware(),
+//        TodoListMiddleware(
+//            repository = Repository,
+//            coroutineContext = Dispatchers.IO + SupervisorJob(),
+//        ),
         LoggerMiddleware(
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         ),
@@ -141,14 +138,14 @@ val storeFactory: StoreFactory<Action, TodosState> =
 
 @Composable
 fun <A> useSelector(f: (TodosState) -> A): State<A> {
-    val store: TodosStore<TodoAction, TodosState> = viewModel(factory = storeFactory)
+    val store: TodosStore<TodosState, TodoAction> = viewModel(factory = storeFactory)
     val selector: Flow<A> = store.state.map { f(it) }
     return selector.collectAsState(f(store.state.value))
 }
 
 @Composable
 fun <A : Action> useDispatch(): State<(A) -> Unit> {
-    val store: TodosStore<A, TodosState> = viewModel(factory = storeFactory)
+    val store: TodosStore<TodosState, A> = viewModel(factory = storeFactory)
     return remember { mutableStateOf({ action: A -> store.dispatch(action) }) }
 }
 
@@ -195,7 +192,7 @@ fun TodoListScreen() {
     val itemsLeft by useSelector { it.itemsLeft() }
     val dispatcher by useDispatch<Action>()
 
-    dispatcher(TodoThunks.TodoAll)
+    dispatcher(TodoThunks.LoadTodos())
 
     Column {
         Header()
@@ -216,7 +213,7 @@ fun TodoListScreen() {
 fun Header() {
     Log.e("Compose", "Header1")
     val text by useSelector { it.input }
-    val dispatcher by useDispatch<TodoListAction>()
+    val dispatcher by useDispatch<Action>()
 
     TextField(
         modifier = Modifier.fillMaxWidth(),
@@ -226,7 +223,7 @@ fun Header() {
         ),
         keyboardActions = KeyboardActions(
             onDone = {
-                dispatcher(AddTodo(text))
+                dispatcher(TodoThunks.AddTodo(text))
                 dispatcher(InputChange(""))
             }
         ),

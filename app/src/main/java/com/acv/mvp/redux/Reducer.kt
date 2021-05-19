@@ -1,8 +1,5 @@
 package com.acv.mvp.redux
 
-import com.acv.mvp.presentation.StoreState
-
-
 fun interface Reducer<S : StoreState> {
     operator fun invoke(state: S, action: Action): S
 }

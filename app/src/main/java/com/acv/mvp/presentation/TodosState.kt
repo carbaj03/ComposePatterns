@@ -1,5 +1,6 @@
 package com.acv.mvp.presentation
 
+import com.acv.mvp.redux.StoreState
 import com.acv.mvp.ui.compose.Filter
 import com.acv.mvp.ui.compose.Todo
 
@@ -34,3 +35,7 @@ data class TodosState(
             Filter.Completed -> todos.filter { it.completed }
         }
 }
+
+data class FakeStore(
+    val fake: String
+) : StoreState
