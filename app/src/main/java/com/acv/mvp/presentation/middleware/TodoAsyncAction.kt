@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
-class TodoThunks(
+class TodoAsyncAction(
     private val repository: Repository,
     override val coroutineContext: CoroutineContext,
 ) : CoroutineScope {
@@ -26,7 +26,9 @@ class TodoThunks(
     fun AddTodo(text: String): AsyncAction<TodosState, Action> =
         AsyncAction { state, dispatch ->
             launch {
-                val todos = repository.put(Todo(state.todos.size + 1, text, false))
+                val todos = repository.put(
+                    Todo(id = state.todos.size + 1, text, completed = false)
+                )
                 todos?.let { dispatch(AddTodoSuccess(todos)) }
                     ?: dispatch(AddTodoError)
             }

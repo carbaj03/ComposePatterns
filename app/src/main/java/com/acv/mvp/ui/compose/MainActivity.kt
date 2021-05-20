@@ -31,8 +31,8 @@ import com.acv.mvp.R
 import com.acv.mvp.data.Repository
 import com.acv.mvp.presentation.*
 import com.acv.mvp.presentation.middleware.LoggerMiddleware
+import com.acv.mvp.presentation.middleware.TodoAsyncAction
 import com.acv.mvp.presentation.middleware.TodoDetailMiddleware
-import com.acv.mvp.presentation.middleware.TodoThunks
 import com.acv.mvp.redux.*
 import com.acv.mvp.ui.compose.theme.MvpTheme
 import kotlinx.coroutines.Dispatchers
@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-val TodoThunks = TodoThunks(
+val TodoThunks = TodoAsyncAction(
     repository = Repository,
     coroutineContext = Dispatchers.IO + SupervisorJob(),
 )
@@ -139,16 +139,18 @@ fun TodoDetailScreen(id: Int) {
     val error by useSelector { it.error }
     val loading by useSelector { it.loading }
 
-    LaunchedEffect(id) { dispatcher(TodoDetailThunks.GetTodo(id)) }
+    LaunchedEffect(id) {
+        dispatcher(TodoDetailThunks.GetTodo(id))
+    }
 
     if (error) {
         Text(text = "ERROR")
         Button(onClick = { dispatcher(GetTodo(id)) }) {
             Text(text = "Retry")
         }
-    } else if (loading)
+    } else if (loading) {
         Text(text = "Loading")
-    else
+    } else {
         Column {
             Text(text = todo?.text.toString())
             Text(text = todo?.completed.toString())
@@ -156,6 +158,7 @@ fun TodoDetailScreen(id: Int) {
                 Text(text = "Back")
             }
         }
+    }
 }
 
 
@@ -174,8 +177,8 @@ fun TodoListScreen() {
         TodoList(
             todos = todos,
             onItemSelected = { isCompleted, todo ->
-                if (isCompleted) dispatcher(CompleteTodo(todo.id))
-                else dispatcher(ActivateTodo(todo.id))
+                if (isCompleted) dispatcher(TodoThunks.CompleteTodo(todo.id))
+                else dispatcher(TodoThunks.ActivateTodo(todo.id))
             }
         )
 
@@ -242,13 +245,13 @@ fun Footer(
     count: Int,
 ) {
     Log.e("Compose", "Footer")
-    val dispatcher by useDispatch<TodoListAction>()
+    val dispatcher by useDispatch<Action>()
 
     Column {
-        Button(onClick = { dispatcher(CompleteAll) }) {
+        Button(onClick = { dispatcher(TodoThunks.CompleteAll()) }) {
             Text("Mark All Completed")
         }
-        Button(onClick = { dispatcher(ClearCompleted) }) {
+        Button(onClick = { dispatcher(TodoThunks.ClearCompleted()) }) {
             Text(text = "Clear Completed")
         }
         RemainingTodos(count)

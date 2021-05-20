@@ -17,7 +17,7 @@ class TodoDetailMiddleware(
     override val coroutineContext: CoroutineContext,
 ) : CoroutineScope {
     fun GetTodo(id: Int): AsyncAction<TodosState, Action> =
-        AsyncAction { state, dispatch ->
+        AsyncAction { _, dispatch ->
             launch {
                 val todo: Todo? = repository.getBy(id)
                 todo?.let { dispatch(GetTodoSuccess(todo)) }

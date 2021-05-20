@@ -7,7 +7,7 @@ object NoAction : Action
 fun interface AsyncAction<S : StoreState, A : Action> : Action {
     operator fun invoke(
         state: S,
-        dispatcher: Dispatcher<A>
+        dispatcher: Dispatcher<A>,
     )
 }
 
@@ -15,15 +15,15 @@ fun interface AsyncAction<S : StoreState, A : Action> : Action {
 //    operator fun invoke(store: Store<S, A>)
 //}
 
-inline fun <reified S : StoreState, A : Action> AsyncAction(
-    reducer: AsyncAction<S, A>
-): AsyncAction<S, A> =
-    AsyncAction { state, dispatcher ->
-        when {
-            state is S -> reducer(state = state, dispatcher = dispatcher)
-            else -> NoAction
-        }
-    }
+//inline fun <reified S : StoreState, A : Action> Thunk(
+//    reducer: AsyncAction<S, A>
+//): AsyncAction<S, A> =
+//    AsyncAction { state, dispatcher ->
+//        when {
+//            state is S -> reducer(state = state, dispatcher = dispatcher)
+//            else -> NoAction
+//        }
+//    }
 
 fun interface Dispatcher<A : Action> {
     operator fun invoke(action: A): A
