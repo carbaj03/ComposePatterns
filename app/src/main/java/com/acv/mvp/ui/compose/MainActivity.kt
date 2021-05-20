@@ -30,6 +30,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.acv.mvp.R
 import com.acv.mvp.data.Repository
 import com.acv.mvp.presentation.*
+import com.acv.mvp.presentation.middleware.LoggerMiddleware
+import com.acv.mvp.presentation.middleware.TodoDetailMiddleware
+import com.acv.mvp.presentation.middleware.TodoThunks
 import com.acv.mvp.redux.*
 import com.acv.mvp.ui.compose.theme.MvpTheme
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +40,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class StoreFactory<A : Action, S : StoreState>(
+class StoreFactory<S : StoreState, A : Action>(
     override val reducer: Reducer<S>,
     override val initialState: S,
     override val middlewares: List<Middleware<S, A>>,
@@ -50,24 +53,13 @@ class StoreFactory<A : Action, S : StoreState>(
     }
 }
 
-
-fun <A : Action, S : StoreState> createStore(
+fun <S : StoreState, A : Action> createStore(
     reducer: Reducer<S>,
     preloadedState: S,
     middlewares: List<Middleware<S, A>>,
 ): Store<S, A> {
-//    if (middlewares.isNotEmpty()) {
-//        return createStore<A, S>(reducer, preloadedState, emptyList())
-//
-//        return enhancer { r, initialState, _ -> createStore(r, initialState) }(
-//            reducer,
-//            preloadedState,
-//            null
-//        )
-//    }
 
     return TodosStore(
-//                sideEffects = sideEffects,
         middlewares = middlewares,
         reducer = reducer,
         initialState = preloadedState
@@ -94,46 +86,27 @@ val TodoThunks = TodoThunks(
     coroutineContext = Dispatchers.IO + SupervisorJob(),
 )
 
+val TodoDetailThunks = TodoDetailMiddleware(
+    repository = Repository,
+    coroutineContext = Dispatchers.IO + SupervisorJob(),
+)
+
 val reducers: Reducer<TodosState> =
     combineReducers(TodoReducer, TodoDetailReducer)
 
-//val effects: List<Middleware<TodoAction, TodosState>> =
-//    listOf(
-//        TodoSideEffect(
-//            repository = Repository,
-//            coroutineContext = Dispatchers.IO + SupervisorJob(),
-//        ),
-//        LoggerSideEffect(
-//            coroutineContext = Dispatchers.IO + SupervisorJob(),
-//        ),
-//        TodoDetailSideEffect(
-//            repository = Repository,
-//            coroutineContext = Dispatchers.IO + SupervisorJob(),
-//        )
-//    )
-
-val effects: List<Middleware<TodosState, Action>> =
+val middlewares: List<Middleware<TodosState, Action>> =
     listOf(
         ThunkMiddleware(),
-//        TodoListMiddleware(
-//            repository = Repository,
-//            coroutineContext = Dispatchers.IO + SupervisorJob(),
-//        ),
         LoggerMiddleware(
-            coroutineContext = Dispatchers.IO + SupervisorJob(),
-        ),
-        TodoDetailMiddleware(
-            repository = Repository,
             coroutineContext = Dispatchers.IO + SupervisorJob(),
         ),
     )
 
-val storeFactory: StoreFactory<Action, TodosState> =
+val storeFactory: StoreFactory<TodosState, Action> =
     StoreFactory(
-//        sideEffects = effects,
         reducer = reducers,
         initialState = TodosState.initalState(),
-        middlewares = effects,
+        middlewares = middlewares,
     )
 
 @Composable
@@ -160,12 +133,13 @@ fun App() {
 @Composable
 fun TodoDetailScreen(id: Int) {
     Log.e("Compose", "TodoDetailScreen")
-    val dispatcher by useDispatch<TodoDetailAction>()
+    val dispatcher by useDispatch<Action>()
+
     val todo by useSelector { it.detail }
     val error by useSelector { it.error }
     val loading by useSelector { it.loading }
 
-    LaunchedEffect(id) { dispatcher(GetTodo(id)) }
+    LaunchedEffect(id) { dispatcher(TodoDetailThunks.GetTodo(id)) }
 
     if (error) {
         Text(text = "ERROR")

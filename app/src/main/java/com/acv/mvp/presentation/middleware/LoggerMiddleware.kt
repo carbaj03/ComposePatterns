@@ -1,16 +1,20 @@
-package com.acv.mvp.presentation
+package com.acv.mvp.presentation.middleware
 
 import android.util.Log
-import com.acv.mvp.redux.*
+import com.acv.mvp.presentation.TodosState
+import com.acv.mvp.redux.Action
+import com.acv.mvp.redux.Dispatcher
+import com.acv.mvp.redux.Middleware
+import com.acv.mvp.redux.Store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
-class LoggerMiddleware<S : StoreState>(
+class LoggerMiddleware(
     override val coroutineContext: CoroutineContext,
-) : Middleware<S, Action>, CoroutineScope {
+) : Middleware<TodosState, Action>, CoroutineScope {
     override fun invoke(
-        store: Store<S, Action>,
+        store: Store<TodosState, Action>,
         next: Dispatcher<Action>,
         action: Action,
     ): Action {

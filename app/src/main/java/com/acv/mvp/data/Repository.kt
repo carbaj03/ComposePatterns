@@ -7,11 +7,17 @@ import kotlinx.coroutines.delay
 object Repository {
     private var todos: List<Todo> =
         listOf(
-            Todo(id = 0, text = "Start", completed = false)
+            Todo(
+                id = 0,
+                text = "Start",
+                completed = false
+            )
         )
 
-    suspend fun getAll(): List<Todo>? =
-        todos
+    suspend fun getAll(): List<Todo>? {
+        delay(2000)
+        return todos
+    }
 
     suspend fun getBy(id: Int): Todo? {
         delay(3000)

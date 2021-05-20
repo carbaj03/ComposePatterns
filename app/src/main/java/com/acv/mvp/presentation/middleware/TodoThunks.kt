@@ -1,6 +1,7 @@
-package com.acv.mvp.presentation
+package com.acv.mvp.presentation.middleware
 
 import com.acv.mvp.data.Repository
+import com.acv.mvp.presentation.*
 import com.acv.mvp.redux.Action
 import com.acv.mvp.redux.AsyncAction
 import com.acv.mvp.ui.compose.Todo
@@ -13,28 +14,28 @@ class TodoThunks(
     override val coroutineContext: CoroutineContext,
 ) : CoroutineScope {
     fun LoadTodos(): AsyncAction<TodosState, Action> =
-        AsyncAction { s, dispatcher ->
+        AsyncAction { state, dispatch ->
             launch {
-                dispatcher(LoadTodos)
-                val todos = Repository.getAll()
-                todos?.let { dispatcher(LoadTodosSuccess(todos)) }
-                    ?: dispatcher(LoadTodosError)
+                dispatch(LoadTodos)
+                val todos = repository.getAll()
+                todos?.let { dispatch(LoadTodosSuccess(todos)) }
+                    ?: dispatch(LoadTodosError)
             }
         }
 
     fun AddTodo(text: String): AsyncAction<TodosState, Action> =
-        AsyncAction { store ->
+        AsyncAction { state, dispatch ->
             launch {
-                val todos = Repository.put(Todo(store.state.value.todos.size + 1, text, false))
-                todos?.let { store.dispatch(AddTodoSuccess(todos)) }
-                    ?: store.dispatch(AddTodoError)
+                val todos = repository.put(Todo(state.todos.size + 1, text, false))
+                todos?.let { dispatch(AddTodoSuccess(todos)) }
+                    ?: dispatch(AddTodoError)
             }
         }
 
     fun CompleteTodo(selectedId: Int): AsyncAction<TodosState, Action> =
         AsyncAction { state, dispatch ->
             launch {
-                val todos = Repository.completeTodo(selectedId)
+                val todos = repository.completeTodo(selectedId)
                 todos?.let { dispatch(CompleteTodoSuccess(todos)) }
                     ?: dispatch(CompleteTodoError)
             }
@@ -43,7 +44,7 @@ class TodoThunks(
     fun CompleteAll(): AsyncAction<TodosState, Action> =
         AsyncAction { state, dispatch ->
             launch {
-                val todos: List<Todo>? = Repository.completeAll()
+                val todos: List<Todo>? = repository.completeAll()
                 todos?.let { dispatch(CompleteAllSuccess(todos)) }
                     ?: dispatch(CompleteAllError)
             }
@@ -52,7 +53,7 @@ class TodoThunks(
     fun ClearCompleted(): AsyncAction<TodosState, Action> =
         AsyncAction { state, dispatch ->
             launch {
-                val todos: List<Todo>? = Repository.clearCompleted()
+                val todos: List<Todo>? = repository.clearCompleted()
                 todos?.let { dispatch(ClearCompletedSuccess(todos)) }
                     ?: dispatch(ClearCompletedError)
             }
@@ -61,7 +62,7 @@ class TodoThunks(
     fun ActivateTodo(activatedId: Int): AsyncAction<TodosState, Action> =
         AsyncAction { state, dispatch ->
             launch {
-                val todos: List<Todo>? = Repository.activateTodo(activatedId)
+                val todos: List<Todo>? = repository.activateTodo(activatedId)
                 todos?.let { dispatch(ActivateTodoSuccess(todos)) }
                     ?: dispatch(ActivateTodoError)
             }
