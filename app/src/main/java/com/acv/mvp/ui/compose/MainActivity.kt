@@ -24,107 +24,36 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.acv.mvp.R
-import com.acv.mvp.data.Repository
 import com.acv.mvp.presentation.*
-import com.acv.mvp.presentation.middleware.LoggerMiddleware
-import com.acv.mvp.presentation.middleware.TodoAsyncAction
-import com.acv.mvp.presentation.middleware.TodoDetailMiddleware
-import com.acv.mvp.redux.*
 import com.acv.mvp.ui.compose.theme.MvpTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-
-class StoreFactory<S : StoreState, A : Action>(
-    override val reducer: Reducer<S>,
-    override val initialState: S,
-    override val middlewares: List<Middleware<S, A>>,
-) : ViewModelProvider.Factory, StoreCreator<S, A> {
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(TodosStore::class.java)) {
-            return createStore(reducer, initialState, middlewares) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
-fun <S : StoreState, A : Action> createStore(
-    reducer: Reducer<S>,
-    preloadedState: S,
-    middlewares: List<Middleware<S, A>>,
-): Store<S, A> {
-
-    return TodosStore(
-        middlewares = middlewares,
-        reducer = reducer,
-        initialState = preloadedState
-    )
-}
 
 class MainActivity : ComponentActivity() {
+
+    private val store = TodosStore(
+        reducer = reducers,
+        initialState = TodosState.initalState(),
+        middlewares = middlewares
+    )
 
     @InternalComposeApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MvpTheme {
-                Surface(color = MaterialTheme.colors.background) {
-                    App()
+            Store(store) {
+                MvpTheme {
+                    Surface(color = MaterialTheme.colors.background) {
+                        App()
+                    }
                 }
             }
         }
     }
 }
 
-val TodoThunks = TodoAsyncAction(
-    repository = Repository,
-    coroutineContext = Dispatchers.IO + SupervisorJob(),
-)
-
-val TodoDetailThunks = TodoDetailMiddleware(
-    repository = Repository,
-    coroutineContext = Dispatchers.IO + SupervisorJob(),
-)
-
-val reducers: Reducer<TodosState> =
-    combineReducers(TodoReducer, TodoDetailReducer)
-
-val middlewares: List<Middleware<TodosState, Action>> =
-    listOf(
-        ThunkMiddleware(),
-        LoggerMiddleware(
-            coroutineContext = Dispatchers.IO + SupervisorJob(),
-        ),
-    )
-
-val storeFactory: StoreFactory<TodosState, Action> =
-    StoreFactory(
-        reducer = reducers,
-        initialState = TodosState.initalState(),
-        middlewares = middlewares,
-    )
-
-@Composable
-fun <A> useSelector(f: (TodosState) -> A): State<A> {
-    val store: TodosStore<TodosState, TodoAction> = viewModel(factory = storeFactory)
-    val selector: Flow<A> = store.state.map { f(it) }
-    return selector.collectAsState(f(store.state.value))
-}
-
-@Composable
-fun <A : Action> useDispatch(): State<(A) -> Unit> {
-    val store: TodosStore<TodosState, A> = viewModel(factory = storeFactory)
-    return remember { mutableStateOf({ action: A -> store.dispatch(action) }) }
-}
-
 @Composable
 fun App() {
-    when (val navigator = useSelector { it.navigation }.value) {
+    when (val navigator = useSelector<TodosState, Navigation> { navigation }.value) {
         is TodoDetail -> TodoDetailScreen(navigator.id)
         is TodoList -> TodoListScreen()
     }
@@ -133,11 +62,11 @@ fun App() {
 @Composable
 fun TodoDetailScreen(id: Int) {
     Log.e("Compose", "TodoDetailScreen")
-    val dispatcher by useDispatch<Action>()
+    val dispatcher by useDispatch()
 
-    val todo by useSelector { it.detail }
-    val error by useSelector { it.error }
-    val loading by useSelector { it.loading }
+    val todo by useSelector<TodosState, Todo?> { detail }
+    val error by useSelector<TodosState, Boolean> { error }
+    val loading by useSelector<TodosState, Boolean> { loading }
 
     LaunchedEffect(id) {
         dispatcher(TodoDetailThunks.GetTodo(id))
@@ -165,9 +94,9 @@ fun TodoDetailScreen(id: Int) {
 @Composable
 fun TodoListScreen() {
     Log.e("Compose", "TodoListScreen")
-    val todos by useSelector { it.filterBy() }
-    val itemsLeft by useSelector { it.itemsLeft() }
-    val dispatcher by useDispatch<Action>()
+    val todos by useSelector<TodosState, List<Todo>> { filterBy() }
+    val itemsLeft by useSelector<TodosState, Int> { itemsLeft() }
+    val dispatcher by useDispatch()
 
     dispatcher(TodoThunks.LoadTodos())
 
@@ -189,8 +118,8 @@ fun TodoListScreen() {
 @Composable
 fun Header() {
     Log.e("Compose", "Header1")
-    val text by useSelector { it.input }
-    val dispatcher by useDispatch<Action>()
+    val text by useSelector<TodosState, String> { input }
+    val dispatcher by useDispatch()
 
     TextField(
         modifier = Modifier.fillMaxWidth(),
@@ -216,7 +145,7 @@ fun TodoList(
     onItemSelected: (Boolean, Todo) -> Unit,
 ) {
     Log.e("Compose", "TodoList")
-    val dispatcher by useDispatch<TodoListAction>()
+    val dispatcher by useDispatch()
 
     LazyColumn {
         items(todos) { todo ->
@@ -245,7 +174,7 @@ fun Footer(
     count: Int,
 ) {
     Log.e("Compose", "Footer")
-    val dispatcher by useDispatch<Action>()
+    val dispatcher by useDispatch()
 
     Column {
         Button(onClick = { dispatcher(TodoThunks.CompleteAll()) }) {
@@ -271,8 +200,8 @@ fun RemainingTodos(count: Int) {
 @Composable
 fun StatusFilter() {
     Log.e("Compose", "StatusFilter")
-    val currentFilter by useSelector { it.filter }
-    val dispatcher by useDispatch<TodoListAction>()
+    val currentFilter by useSelector<TodosState, Filter> { filter }
+    val dispatcher by useDispatch()
 
     val color: (Filter) -> Color = { filter: Filter ->
         if (filter == currentFilter) Color.LightGray else Color.Transparent

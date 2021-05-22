@@ -11,16 +11,20 @@ fun interface AsyncAction<S : StoreState, A : Action> : Action {
     )
 }
 
-//fun interface AsyncActionType<S : StoreState, A : Action> {
-//    operator fun invoke(store: Store<S, A>)
+//fun interface AsyncActionArgs<S : StoreState, A : Action, D : Argument> : Action {
+//    operator fun D.invoke(
+//        state: S,
+//        dispatcher: Dispatcher<A>,
+//    )
 //}
 
-//inline fun <reified S : StoreState, A : Action> Thunk(
-//    reducer: AsyncAction<S, A>
+//inline fun <S : StoreState, reified A : Action, D : Argument> AsyncAction(
+//    d: D,
+//    asyncAction: AsyncActionArgs<S, A, D>
 //): AsyncAction<S, A> =
-//    AsyncAction { state, dispatcher ->
-//        when {
-//            state is S -> reducer(state = state, dispatcher = dispatcher)
+//    AsyncAction { state, action ->
+//        when (action) {
+//            is A -> asyncAction.run { d(state, action) }
 //            else -> NoAction
 //        }
 //    }
@@ -28,3 +32,9 @@ fun interface AsyncAction<S : StoreState, A : Action> : Action {
 fun interface Dispatcher<A : Action> {
     operator fun invoke(action: A): A
 }
+
+//interface Argument
+//data class TodoArg(
+//    val repository: Repository,
+//    val coroutineScope: CoroutineScope,
+//) : Argument

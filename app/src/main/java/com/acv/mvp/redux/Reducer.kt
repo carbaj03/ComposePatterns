@@ -27,3 +27,6 @@ operator fun <S : StoreState> Reducer<S>.plus(other: Reducer<S>): Reducer<S> =
     Reducer { state, action ->
         other(this(state, action), action)
     }
+
+
+val InitialReducer = Reducer<StoreState, Action> { action -> this }
