@@ -69,7 +69,6 @@ fun <S : StoreState, A : Action> Store(
     }
 }
 
-
 val TodoThunks = TodoAsyncAction(
     repository = Repository,
     coroutineContext = Dispatchers.IO + SupervisorJob(),
@@ -89,7 +88,7 @@ val TodoDetailThunks = TodoDetailMiddleware(
 //    )
 
 @Composable
-internal fun <S : StoreState, A> useSelector(f: S.() -> A): State<A> {
+fun <S : StoreState, A> useSelector(f: S.() -> A): State<A> {
     val store: Store<S, Action> = LocalStore.current as Store<S, Action>
 //    val store: TodosStore<TodosState, TodoAction> = viewModel(factory = storeFactory)
     val selector: Flow<A> = store.state.map { f(it) }

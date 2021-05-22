@@ -23,10 +23,10 @@ fun <S : StoreState> combineReducers(vararg reducers: Reducer<S>): Reducer<S> =
         reducers.fold(state, { s, reducer -> reducer(s, action) })
     }
 
+fun <T> compose(functions: List<(T) -> T>): (T) -> T =
+    { x -> functions.foldRight(x, { f, composed -> f(composed) }) }
+
 operator fun <S : StoreState> Reducer<S>.plus(other: Reducer<S>): Reducer<S> =
     Reducer { state, action ->
         other(this(state, action), action)
     }
-
-
-val InitialReducer = Reducer<StoreState, Action> { action -> this }
