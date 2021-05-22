@@ -26,14 +26,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.acv.mvp.R
 import com.acv.mvp.presentation.*
+import com.acv.mvp.presentation.middleware.LoggerMiddleware
+import com.acv.mvp.redux.Action
+import com.acv.mvp.redux.Store
+import com.acv.mvp.redux.ThunkMiddleware
 import com.acv.mvp.ui.compose.theme.MvpTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 class MainActivity : ComponentActivity() {
 
-    private val store = TodosStore(
-        reducer = reducers,
-        initialState = TodosState.initalState(),
-        middlewares = middlewares
+    private val store: Store<TodosState, Action> = createStore(
+        reducers,
+        TodosState.initalState(),
+        applyMiddleware(
+            ThunkMiddleware(),
+            LoggerMiddleware(
+                coroutineContext = Dispatchers.IO + SupervisorJob(),
+            ),
+        )
     )
 
     @InternalComposeApi

@@ -3,7 +3,7 @@ package com.acv.mvp.presentation
 import com.acv.mvp.redux.*
 
 fun interface StoreEnhancer<S : StoreState, A : Action> {
-    operator fun invoke(next: StoreCreator<S, A>): StoreCreator<S, A>
+    operator fun invoke(creator: StoreCreator<S, A>): StoreCreator<S, A>
 }
 
 
@@ -29,6 +29,13 @@ fun interface StoreCreator<S : StoreState, A : Action> {
  * @returns {StoreEnhancer} A store enhancer applying the middleware.
  */
 fun <S : StoreState, A : Action> applyMiddleware(vararg middlewares: Middleware<S, A>): StoreEnhancer<S, A> =
-    StoreEnhancer {
-        StoreCreator { r, pre -> it(r, pre) }
+    StoreEnhancer { storeCreator ->
+        StoreCreator { reducer, initialState ->
+            val store = storeCreator(reducer, initialState)
+            val origDispatch = store.dispatch
+            store.dispatch = middlewares.foldRight(origDispatch) { middleware, dispatcher ->
+                Dispatcher { middleware(store, dispatcher, it) }
+            }
+            store
+        }
     }

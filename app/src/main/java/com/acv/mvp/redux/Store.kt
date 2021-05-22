@@ -1,15 +1,16 @@
 package com.acv.mvp.redux
 
 import androidx.lifecycle.ViewModel
+import com.acv.mvp.presentation.StoreEnhancer
 import kotlinx.coroutines.flow.StateFlow
 
 abstract class Store<S : StoreState, A : Action> : ViewModel() {
+    abstract var dispatch: Dispatcher<A>
     abstract val state: StateFlow<S>
-    abstract fun dispatch(action: A)
 }
 
 interface StoreCreator<S : StoreState, A : Action> {
     val reducer: Reducer<S>
     val initialState: S
-    val middlewares: List<Middleware<S, A>>
+    val enhancer: StoreEnhancer<S, A>?
 }
