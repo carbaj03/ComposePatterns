@@ -1,7 +1,6 @@
 package com.acv.mvp.redux
 
 import androidx.lifecycle.ViewModel
-import com.acv.mvp.presentation.StoreEnhancer
 import kotlinx.coroutines.flow.StateFlow
 
 abstract class Store<S : StoreState, A : Action> : ViewModel() {
@@ -9,8 +8,8 @@ abstract class Store<S : StoreState, A : Action> : ViewModel() {
     abstract val state: StateFlow<S>
 }
 
-interface StoreCreator<S : StoreState, A : Action> {
-    val reducer: Reducer<S>
-    val initialState: S
-    val enhancer: StoreEnhancer<S, A>?
-}
+//interface StoreCreator<S : StoreState, A : Action> {
+//    val reducer: Reducer<S>
+//    val initialState: S
+//    val enhancer: StoreEnhancer<S, A>?
+//}

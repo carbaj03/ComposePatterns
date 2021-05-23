@@ -1,5 +1,7 @@
 package com.acv.mvp.redux
 
+import com.acv.mvp.presentation.StoreEnhancer
+
 fun interface Reducer<S : StoreState> {
     operator fun invoke(state: S, action: Action): S
 }
@@ -23,8 +25,14 @@ fun <S : StoreState> combineReducers(vararg reducers: Reducer<S>): Reducer<S> =
         reducers.fold(state, { s, reducer -> reducer(s, action) })
     }
 
+fun <S : StoreState, A : Action> combineEnhancer(vararg enhancers: StoreEnhancer<S, A>): StoreEnhancer<S, A> =
+    StoreEnhancer { store ->
+        enhancers.fold(store, { storeCreator, enhancer -> enhancer(storeCreator) })
+    }
+
 fun <T> compose(functions: List<(T) -> T>): (T) -> T =
     { x -> functions.foldRight(x, { f, composed -> f(composed) }) }
+
 
 operator fun <S : StoreState> Reducer<S>.plus(other: Reducer<S>): Reducer<S> =
     Reducer { state, action ->

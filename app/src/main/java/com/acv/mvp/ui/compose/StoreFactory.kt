@@ -1,14 +1,11 @@
 package com.acv.mvp.ui.compose
 
 import androidx.compose.runtime.*
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.acv.mvp.data.Repository
-import com.acv.mvp.presentation.*
+import com.acv.mvp.presentation.StoreEnhancer
 import com.acv.mvp.presentation.middleware.TodoAsyncAction
 import com.acv.mvp.presentation.middleware.TodoDetailMiddleware
 import com.acv.mvp.redux.*
-import com.acv.mvp.redux.StoreCreator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
@@ -16,18 +13,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 
-class StoreFactory<S : StoreState, A : Action>(
-    override val reducer: Reducer<S>,
-    override val initialState: S,
-    override val enhancer: StoreEnhancer<S, A>?,
-) : ViewModelProvider.Factory, StoreCreator<S, A> {
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(TodosStore::class.java)) {
-            return createStore(reducer, initialState, enhancer) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
+//class StoreFactory<S : StoreState, A : Action>(
+//    override val reducer: Reducer<S>,
+//    override val initialState: S,
+//    override val enhancer: StoreEnhancer<S, A>?,
+//) : ViewModelProvider.Factory, StoreCreator<S, A> {
+//    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+//        if (modelClass.isAssignableFrom(TodosStore::class.java)) {
+//            return createStore(reducer, initialState, enhancer) as T
+//        }
+//        throw IllegalArgumentException("Unknown ViewModel class")
+//    }
+//}
 
 fun <S : StoreState, A : Action> createStore(
     reducer: Reducer<S>,
@@ -35,9 +32,10 @@ fun <S : StoreState, A : Action> createStore(
     enhancer: StoreEnhancer<S, A>? = null,
 ): Store<S, A> {
     if (enhancer != null) {
-        return enhancer { r, initialState -> createStore(r, initialState) }(
+        return enhancer { r, initialState, en -> createStore(r, initialState) }(
             reducer,
-            preloadedState
+            preloadedState,
+            null
         )
     }
 
@@ -53,9 +51,6 @@ fun <S : StoreState, A : Action> createStore(
         override val state: StateFlow<S> = currentState
     }
 }
-
-val reducers: Reducer<TodosState> =
-    combineReducers(TodoReducer, TodoDetailReducer)
 
 
 internal val LocalStore: ProvidableCompositionLocal<Store<StoreState, Action>> =

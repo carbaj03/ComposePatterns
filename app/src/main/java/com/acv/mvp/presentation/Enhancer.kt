@@ -1,14 +1,18 @@
 package com.acv.mvp.presentation
 
+import android.util.Log
 import com.acv.mvp.redux.*
 
 fun interface StoreEnhancer<S : StoreState, A : Action> {
     operator fun invoke(creator: StoreCreator<S, A>): StoreCreator<S, A>
 }
 
-
 fun interface StoreCreator<S : StoreState, A : Action> {
-    operator fun invoke(reducer: Reducer<S>, preloadedState: S): Store<S, A>
+    operator fun invoke(
+        reducer: Reducer<S>,
+        preloadedState: S,
+        enhancer: StoreEnhancer<S, A>?
+    ): Store<S, A>
 }
 
 
@@ -30,12 +34,23 @@ fun interface StoreCreator<S : StoreState, A : Action> {
  */
 fun <S : StoreState, A : Action> applyMiddleware(vararg middlewares: Middleware<S, A>): StoreEnhancer<S, A> =
     StoreEnhancer { storeCreator ->
-        StoreCreator { reducer, initialState ->
-            val store = storeCreator(reducer, initialState)
+        StoreCreator { reducer, initialState, en ->
+            val store = storeCreator(reducer, initialState, en)
             val origDispatch = store.dispatch
             store.dispatch = middlewares.foldRight(origDispatch) { middleware, dispatcher ->
                 Dispatcher { middleware(store, dispatcher, it) }
             }
+            store
+        }
+    }
+
+
+fun <S : StoreState, A : Action> a(): StoreEnhancer<S, A> =
+    StoreEnhancer { storeCreator ->
+        StoreCreator { reducer, initialState, en ->
+            val store = storeCreator(reducer, initialState, en)
+            Log.e("saf", "sfa")
+//            store.dispatch = Dispatcher { Log.e("saf", "sfa"); it }
             store
         }
     }
