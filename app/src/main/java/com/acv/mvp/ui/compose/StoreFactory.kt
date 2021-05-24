@@ -104,7 +104,3 @@ val TodoDetailThunks = TodoDetailMiddleware(
     repository = Repository,
     coroutineContext = Dispatchers.IO + SupervisorJob(),
 )
-
-
-//@Composable
-//fun <A> useSelector(f: TodosState.() -> A) = useSelectorInternal(f)
