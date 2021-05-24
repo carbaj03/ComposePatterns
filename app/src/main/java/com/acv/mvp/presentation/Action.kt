@@ -6,6 +6,8 @@ import com.acv.mvp.ui.compose.Todo
 
 sealed class TodoAction : Action
 
+//sealed class Navigation : TodoAction()
+
 sealed class TodoListAction : TodoAction()
 object LoadTodos : TodoListAction()
 data class LoadTodosSuccess(

@@ -9,21 +9,24 @@ data class TodosState(
     val todos: List<Todo>,
     val input: String,
     val filter: Filter,
-    val detail: Todo?,
+    val currentTodo: Int?,
     val error: Boolean,
     val loading: Boolean,
 ) : StoreState {
     companion object {
-        fun initalState() = TodosState(
+        fun initialState() = TodosState(
             navigation = TodoList,
             todos = emptyList(),
             input = "",
             filter = Filter.All,
-            detail = null,
+            currentTodo = null,
             error = false,
             loading = false,
         )
     }
+
+    fun getTodo(): Todo? =
+        todos.firstOrNull { it.id == currentTodo }
 
     fun itemsLeft(): Int =
         todos.count { !it.completed }

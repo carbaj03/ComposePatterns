@@ -25,7 +25,7 @@ fun <S : StoreState> combineReducers(vararg reducers: Reducer<S>): Reducer<S> =
         reducers.fold(state, { s, reducer -> reducer(s, action) })
     }
 
-fun <S : StoreState, A : Action> combineEnhancer(vararg enhancers: StoreEnhancer<S, A>): StoreEnhancer<S, A> =
+fun <S : StoreState> combineEnhancer(vararg enhancers: StoreEnhancer<S>): StoreEnhancer<S> =
     StoreEnhancer { store ->
         enhancers.fold(store, { storeCreator, enhancer -> enhancer(storeCreator) })
     }

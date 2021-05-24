@@ -28,3 +28,11 @@ val TodoReducer: Reducer<TodosState> =
             is ShowDetail -> copy(navigation = TodoDetail(action.id))
         }
     }
+
+val NavigationReducer: Reducer<TodosState> =
+    Reducer<TodosState, Navigation> { action ->
+        when (action) {
+            is TodoDetail -> copy(currentTodo = action.id, navigation = TodoDetail(action.id))
+            TodoList -> copy(navigation = TodoList)
+        }
+    }

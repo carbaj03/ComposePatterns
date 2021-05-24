@@ -2,7 +2,6 @@ package com.acv.mvp.presentation.middleware
 
 import com.acv.mvp.data.Repository
 import com.acv.mvp.presentation.*
-import com.acv.mvp.redux.Action
 import com.acv.mvp.redux.AsyncAction
 import com.acv.mvp.ui.compose.Todo
 import kotlinx.coroutines.CoroutineScope
@@ -13,7 +12,7 @@ class TodoAsyncAction(
     private val repository: Repository,
     override val coroutineContext: CoroutineContext,
 ) : CoroutineScope {
-    fun LoadTodos(): AsyncAction<TodosState, Action> =
+    fun LoadTodos(): AsyncAction<TodosState> =
         AsyncAction { state, dispatch ->
             launch {
                 dispatch(LoadTodos)
@@ -23,7 +22,7 @@ class TodoAsyncAction(
             }
         }
 
-    fun AddTodo(text: String): AsyncAction<TodosState, Action> =
+    fun AddTodo(text: String): AsyncAction<TodosState> =
         AsyncAction { state, dispatch ->
             launch {
                 val todos = repository.put(
@@ -34,7 +33,7 @@ class TodoAsyncAction(
             }
         }
 
-    fun CompleteTodo(selectedId: Int): AsyncAction<TodosState, Action> =
+    fun CompleteTodo(selectedId: Int): AsyncAction<TodosState> =
         AsyncAction { state, dispatch ->
             launch {
                 val todos = repository.completeTodo(selectedId)
@@ -43,7 +42,7 @@ class TodoAsyncAction(
             }
         }
 
-    fun CompleteAll(): AsyncAction<TodosState, Action> =
+    fun CompleteAll(): AsyncAction<TodosState> =
         AsyncAction { state, dispatch ->
             launch {
                 val todos: List<Todo>? = repository.completeAll()
@@ -52,7 +51,7 @@ class TodoAsyncAction(
             }
         }
 
-    fun ClearCompleted(): AsyncAction<TodosState, Action> =
+    fun ClearCompleted(): AsyncAction<TodosState> =
         AsyncAction { state, dispatch ->
             launch {
                 val todos: List<Todo>? = repository.clearCompleted()
@@ -61,7 +60,7 @@ class TodoAsyncAction(
             }
         }
 
-    fun ActivateTodo(activatedId: Int): AsyncAction<TodosState, Action> =
+    fun ActivateTodo(activatedId: Int): AsyncAction<TodosState> =
         AsyncAction { state, dispatch ->
             launch {
                 val todos: List<Todo>? = repository.activateTodo(activatedId)

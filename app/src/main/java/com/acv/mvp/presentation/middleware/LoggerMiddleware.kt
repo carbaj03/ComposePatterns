@@ -12,10 +12,10 @@ import kotlin.coroutines.CoroutineContext
 
 class LoggerMiddleware(
     override val coroutineContext: CoroutineContext,
-) : Middleware<TodosState, Action>, CoroutineScope {
+) : Middleware<TodosState>, CoroutineScope {
     override fun invoke(
-        store: Store<TodosState, Action>,
-        next: Dispatcher<Action>,
+        store: Store<TodosState>,
+        next: Dispatcher,
         action: Action,
     ): Action {
         launch {

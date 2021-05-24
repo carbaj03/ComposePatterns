@@ -1,13 +1,13 @@
 package com.acv.mvp.redux
 
-fun <S : StoreState, A : Action> ThunkMiddleware(): Middleware<S, A> =
+fun <S : StoreState> ThunkMiddleware(): Middleware<S> =
     Middleware { store, next, action ->
-        if (action is AsyncAction<*, *>) {
-            (action as AsyncAction<S, A>)(
+        if (action is AsyncAction<*>) {
+            (action as AsyncAction<S>)(
                 state = store.state.value,
                 dispatcher = next
             )
-            NoAction as A
+            NoAction
         } else {
             next(action)
         }
