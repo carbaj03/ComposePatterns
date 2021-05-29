@@ -8,7 +8,7 @@ object Repository {
     private var todos: List<Todo> =
         listOf(
             Todo(
-                id = 0,
+                id = 10,
                 text = "Start",
                 completed = false
             )

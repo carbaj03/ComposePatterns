@@ -25,14 +25,14 @@ val TodoReducer: Reducer<TodosState> =
             is ActivateTodoSuccess -> copy(todos = action.todos)
             is ActivateTodoError -> copy(error = true)
             is FilterBy -> copy(filter = action.filter)
-            is ShowDetail -> copy(navigation = TodoDetail(action.id))
+//            is ShowDetail -> copy(navigation = TodoDetail(action.id))
         }
     }
 
-val NavigationReducer: Reducer<TodosState> =
-    Reducer<TodosState, Navigation> { action ->
-        when (action) {
-            is TodoDetail -> copy(currentTodo = action.id, navigation = TodoDetail(action.id))
-            TodoList -> copy(navigation = TodoList)
-        }
-    }
+//val NavigationReducer: Reducer<TodosState> =
+//    Reducer<TodosState, Navigation> { action ->
+//        when (action) {
+//            is TodoDetail -> copy(currentTodo = action.id, navigation = TodoDetail(action.id))
+//            TodoList -> copy(navigation = TodoList)
+//        }
+//    }

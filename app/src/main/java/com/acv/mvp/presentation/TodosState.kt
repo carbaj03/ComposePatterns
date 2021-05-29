@@ -5,28 +5,28 @@ import com.acv.mvp.ui.compose.Filter
 import com.acv.mvp.ui.compose.Todo
 
 data class TodosState(
-    val navigation: Navigation,
+//    val navigation: Navigation,
     val todos: List<Todo>,
     val input: String,
     val filter: Filter,
-    val currentTodo: Int?,
+//    val currentTodo: Int?,
     val error: Boolean,
     val loading: Boolean,
 ) : StoreState {
     companion object {
         fun initialState() = TodosState(
-            navigation = TodoList,
+//            navigation = TodoList,
             todos = emptyList(),
             input = "",
             filter = Filter.All,
-            currentTodo = null,
+//            currentTodo = null,
             error = false,
             loading = false,
         )
     }
 
-    fun getTodo(): Todo? =
-        todos.firstOrNull { it.id == currentTodo }
+    fun getTodo(id: Int): Todo? =
+        todos.firstOrNull { it.id == id }
 
     fun itemsLeft(): Int =
         todos.count { !it.completed }

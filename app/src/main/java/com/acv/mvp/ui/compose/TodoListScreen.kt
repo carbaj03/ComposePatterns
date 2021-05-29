@@ -24,13 +24,15 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.acv.mvp.R
 import com.acv.mvp.presentation.FilterBy
 import com.acv.mvp.presentation.InputChange
-import com.acv.mvp.presentation.TodoDetail
+import com.acv.mvp.presentation.middleware.NavigateTo
+import com.acv.mvp.presentation.middleware.Screen
 
 @Composable
-fun TodoListScreen() {
+fun TodoListScreen(navController: NavHostController) {
     Log.e("Compose", "TodoListScreen")
     val todos by Store.useSelector { filterBy() }
     val itemsLeft by Store.useSelector { itemsLeft() }
@@ -97,7 +99,9 @@ fun TodoList(
                     onCheckedChange = { onItemSelected(it, todo) }
                 )
                 Image(
-                    modifier = Modifier.clickable { dispatcher(TodoDetail(todo.id)) },
+                    modifier = Modifier.clickable {
+                        dispatcher(NavigateTo(Screen.TodoDetail(todo.id)))
+                    },
                     painter = painterResource(R.drawable.ic_eye),
                     contentDescription = "See Detail of ${todo.text}",
                     colorFilter = ColorFilter.tint(color = Color.Blue)

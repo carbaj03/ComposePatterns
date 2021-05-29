@@ -8,13 +8,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import com.acv.mvp.presentation.GetTodo
+import com.acv.mvp.presentation.middleware.GoBack
 
 @Composable
 fun TodoDetailScreen(id: Int) {
     Log.e("Compose", "TodoDetailScreen")
     val dispatcher by Store.useDispatch()
 
-    val todo by Store.useSelector { getTodo() }
+    val todo by Store.useSelector { getTodo(id) }
     val error by Store.useSelector { error }
     val loading by Store.useSelector { loading }
 
@@ -33,7 +34,7 @@ fun TodoDetailScreen(id: Int) {
         Column {
             Text(text = todo?.text.toString())
             Text(text = todo?.completed.toString())
-            Button(onClick = { dispatcher(com.acv.mvp.presentation.TodoList) }) {
+            Button(onClick = { dispatcher(GoBack) }) {
                 Text(text = "Back")
             }
         }
